@@ -4,8 +4,6 @@ export update_weights!, update_γ!, Δ, stdp=#
 
 function update_weights!(w, γ, connections, t, tpre, tpost, da, tconst; δt=1, A₋=-1, t₋=15)
 
-	4*5
-
 	γ .= update_γ!(γ, connections, t, tpre, tpost, tconst, A₋, t₋, δt) # update tag
 
 	δw = γ .* da # update weights based on da and tag

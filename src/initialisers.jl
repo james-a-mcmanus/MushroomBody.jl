@@ -26,7 +26,76 @@ function create_synapses(nn; ns=10, weight=2)
 end
 
 
+#=function create_synapses!(arraytofill::Array{Array}, filler; ns=100)
 
+	for l =1:length(arraytofill)
+
+		postnum = size(arraytofill[l],2)
+		arraytofill[l][1:ns,1:postnum] .= filler
+
+		for i = 1:size(arraytofill[l],2)
+           arraytofill[l][:,i] .= shuffle(arraytofill[l][:,i])
+       	end
+
+	end
+
+end=#
+
+function create_synapses!(arraytofill, filler; ns=10)
+
+	# if any(ns .> size(arraytofill[:](1)))
+
+	# 	println("That matrix doesn't look very sparse!")
+
+	# end
+
+	for l =1:length(arraytofill)
+
+		prenum, postnum = size(arraytofill[l])
+
+		i = Array{Int,1}(undef, ns*postnum)
+		
+		for ii = 1:postnum
+           i[1 + (ii-1) * ns: (ii-1)*ns + ns] .= shuffle(1:prenum)[1:ns]#vcat(out, shuffle(1:prenum)[1:ns])
+       	end
+		
+		j = repeat(collect(1:postnum),inner=ns)
+		
+		v = repeat([filler],outer=ns*postnum)
+
+		for ii =1:length(i)
+
+			arraytofill[l][i[ii],j[ii]] = v[ii]
+
+		end
+
+	end
+
+end
+
+function fillentries!(sparray, filler)
+
+	for l = 1:length(sparray)
+	
+		(i, j, v) = findnz(sparray[l])
+		sparray[l] = sparse(i,j, v .* filler)
+
+	end
+
+	return sparray
+
+end
+
+function fillcells!(arraytofill, filler)
+
+
+	for l = 1:length(arraytofill)
+
+		arraytofill[l] .= filler
+
+	end
+
+end
 
 # Function for filling an array full of a specific 
 function create_neurons(nn, filler)

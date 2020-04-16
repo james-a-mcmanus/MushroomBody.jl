@@ -39,3 +39,20 @@ function update_spikes!(v, sp, spt, t, vt, rec, c, d)
 	return sp
 
 end
+
+#=
+function calc_output!(output, w, ACh, rev, v)
+# this is an (hopefully) optimised version of calc_output! in which everything except the voltage (and maybe the ACh?) is a sparse matrix
+
+
+
+end=#
+
+function calc_output!(output, w, ACh, rev, v)
+
+	a = 4
+	@bp
+
+	output .= (rev .- v) .* w .* ACh 
+
+end
