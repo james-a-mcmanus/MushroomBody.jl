@@ -4,11 +4,13 @@ export update_weights!, update_γ!, Δ, stdp=#
 
 function update_weights!(w, γ, connections, t, tpre, tpost, da, tconst; δt=1, A₋=-1, t₋=15)
 
+	@bp
+
 	γ .= update_γ!(γ, connections, t, tpre, tpost, tconst, A₋, t₋, δt) # update tag
 
 	δw = γ .* da # update weights based on da and tag
 
-	w .= δw .* δt # also need to have a maximum and minimum weight
+	w .= w .+ δw .* δt # also need to have a maximum and minimum weight
 
 end
 
@@ -18,20 +20,9 @@ function update_γ!(γ, connections, t, tpre, tpost, tconst, A₋, t₋, δt)
 
 	δγ = (-γ ./ tconst) .+ stdp(latency, A₋, t₋) .* Δ( (t .- tpre) .* (t .- tpost') )
 
-	γ .= γ .* δγ .* δt
+	γ .= γ .+ δγ .* δt
 end
 
-
-function Δ(td::Number)
-
-	td == 0 ? 1 : 0
-end
-
-function Δ(td::Array)
-
-	collect( td .== 0 )
-
-end
 
 function stdp(latency, A₋, t₋)
 

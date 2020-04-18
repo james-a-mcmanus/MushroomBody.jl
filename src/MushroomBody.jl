@@ -1,25 +1,23 @@
 module MushroomBody
 
-export run_model, create_synapses!, sparsedensemult, fillcells!, fillentries!, calc_output!#, get_parameters, create_synapses!
+export run_model, create_synapses!, update_weights! ,sparsedensemult, fillcells!, fillentries!, calc_output!,update_activation!, update_γ!
 
-#using JLD2, FileIO
-using SparseArrays
+
+using SparseArrays, Debugger
 
 include("UpdateWeights.jl")
 include("initialisers.jl")
 include("Parameters.jl")
-include("Rewards.jl")
+include("Neurotransmitters.jl")
 include("UpdateActivation.jl")
 include("helpers.jl")
-#include("Parameters2.jl")
-
+#include("plotters.jl")
 
 
 function run_model()
 
 	# preallocating all the parameters
-	nn = SA[1000, 10000, 1]
-	nl = length(nn)
+	nn = SA[10, 100, 1]
 
 	# neuron types
 	activation = [Vector{Float64}(undef,i) for i in nn]
@@ -27,16 +25,14 @@ function run_model()
 	spiked = [Vector{Bool}(undef,i) for i in nn]
 	spt = [Vector{Int}(undef,i) for i in nn]
 	I = [Vector{Float64}(undef,i) for i in nn]
+	output = [Vector{Float64}(undef,i) for i in nn]
 
 	#synapse types
 	synapses = [spzeros(nn[i], nn[i+1]) for i = 1:length(nn)-1]
-	#weights = [spzeros(nn[i], nn[i+1]) for i = 1:length(nn)-1]
 	γ = [spzeros(nn[i], nn[i+1]) for i = 1:length(nn)-1]
 	ACh = [spzeros(nn[i], nn[i+1]) for i = 1:length(nn)-1]
-	output = [spzeros(nn[i], nn[i+1]) for i = 1:length(nn)-1]
-	#actually should output be a neuron-type?
-
-	#parameters = load("Parameters.jld2")
+	#output = [spzeros(nn[i], nn[i+1]) for i = 1:length(nn)-1]
+	#actually should output be a neuron-type? - i'm sure of this...
 
 	# create layers
 	fillcells!(activation,-60.0)
@@ -49,42 +45,30 @@ function run_model()
 	create_synapses!(synapses, 1)
 	weights = 2 .* synapses
 
-
-	for t = 1:10
+	for t = 1:1000
 
 		for l = 1:length(nn)
 
-			update_activation!(nn[l], activation[l], vr[l], spiked[l], spt[l], t, vt[l], rec[l], I[l], C[l], a[l], b[l], c[l], d[l], k[l])
-			#da = update_da(da, BA, τ, δt)
-
+			update_activation!(nn[l], activation[l], vr[l], spiked[l], spt[l], t, vt[l], rec[l], output[l], C[l], a[l], b[l], c[l], d[l], k[l])
+			
 			da = 1
+			#da = update_da!(da, BA, τ)
 
 			if l != length(nn)
 
+				update_ACh!(ACh[l], synt[l], Φ[l], t, spt[l])
 
-				calc_output!(output[l], weights[l], ACh[l], rev[l], activation[l])
+				calc_output!(output[l+1], weights[l], ACh[l], rev[l], activation[l])
 
-				update_weights!(weights[l], γ[l], synapses[l], t, spt[l], spt[l+1], da, tconst[l]; δt=1, A₋=-1, t₋=15)				
+				update_weights!(weights[l], γ[l], synapses[l], t, spt[l], spt[l+1], da, tconst[l]; δt=1, A₋=-1, t₋=15)
 
 			end
+
 
 		end
 	end
 
-end
-
-
-function get_parameters(parameters,paramlist)
-
-	out = []
-
-	for item in paramlist
-
-		push!(out, parameters[item])
-
-	end
-
-	return out
+	return weights
 
 end
 

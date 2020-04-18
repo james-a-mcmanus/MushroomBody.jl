@@ -21,3 +21,16 @@ function sparsedensemult(sparsemat::SparseMatrixCSC, densemat)
 	return outmat
 
 end
+
+function Δ(td::Number)
+
+	td == 0 ? 1 : 0
+end
+
+
+
+function Δ(td::Array)
+
+	collect( td .== 0 )
+	
+end

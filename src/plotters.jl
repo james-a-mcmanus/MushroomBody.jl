@@ -1,5 +1,6 @@
 # plotting functions
-using GR
+using Plots
+gr()
 
 # this takes a load of spikes and plots them on an animated graph
 function spiketrain(t, spikes)
@@ -17,5 +18,11 @@ function spiketrain(t, matrix::Array{<:Any,2}, spikes::BitArray{1})
 	matrix[:,t] = spikes
 	imshow(matrix)
 	return(matrix)
+
+end
+
+function visualiseweights(weights)
+
+	imshow(weights[l])
 
 end

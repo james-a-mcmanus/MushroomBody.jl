@@ -50,9 +50,6 @@ end=#
 
 function calc_output!(output, w, ACh, rev, v)
 
-	a = 4
-	@bp
-
-	output .= (rev .- v) .* w .* ACh 
+	output .= dropdims(sum((rev .- v) .* w .* ACh, dims = 1),dims=1)
 
 end
