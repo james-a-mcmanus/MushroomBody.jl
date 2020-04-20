@@ -51,7 +51,6 @@ function run_model()
 
 			update_activation!(nn[l], activation[l], vr[l], spiked[l], spt[l], t, vt[l], rec[l], output[l], C[l], a[l], b[l], c[l], d[l], k[l])
 			
-			da = 1
 			#da = update_da!(da, BA, τ)
 
 			if l != length(nn)
@@ -66,9 +65,5 @@ function run_model()
 
 		end
 	end
-
-	return weights
-
 end
-
 end # module
