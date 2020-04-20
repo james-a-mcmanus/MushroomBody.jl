@@ -48,9 +48,10 @@ function calc_output!(output, w, ACh, rev, v)
 
 end=#
 
-function calc_output!(output, w, ACh, rev, v)
+function calc_input!(input, w, ACh, rev, v) # this should really be called calc_input!
 
-	output .= dropdims(sum((rev .- v) .* w .* ACh, dims = 1),dims=1)
+	@bp
+	input .= dropdims(sum(w .* ACh .* (rev .- v)', dims = 1), dims=1)
 	# this v should be the v of the current neuron (?)
 
 end
