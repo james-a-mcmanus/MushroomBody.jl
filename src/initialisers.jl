@@ -1,6 +1,6 @@
 # this page is going to hold all of the setting-up functions 
 # we will need to know how many neurons are in each layer and how many connections there are between each layer
-using Random
+using Random, CuArrays
 
 # Function for creating the weights and connections of a layer
 
@@ -22,6 +22,43 @@ function create_synapses(nn; ns=10, weight=2)
 	end
 
 	return (connections, weights)
+
+end
+
+function cuconnections(nn, filler, ns)
+
+	out = [zeros(nn[i], nn[i+1]) for i = 1:length(nn)-1]
+	cu(create_synapses!(out, filler, ns=ns))
+	return out
+
+end
+
+
+function cusynapses(nn, filler)
+	#potentially worth making this a cu of cu arrays instead.
+	out = []
+
+	for l = 1:length(nn)-1
+
+		push!(out, CuArrays.fill(filler, nn[l], nn[l+1]))
+
+	end
+
+	return out	
+
+end
+
+function cuneurons(nn, filler)
+
+	out = []
+
+	for l = 1:length(nn)
+
+		push!(out, CuArrays.fill(filler, nn[l]))
+
+	end
+
+	return out
 
 end
 

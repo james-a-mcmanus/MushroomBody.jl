@@ -5,6 +5,7 @@ export nn, c, d, C, noisestd, vr, cap, a, b, k, vt, dvoltage, synt, quantile, tâ
 using StaticArrays
 
 nn = SA[20, 100, 1]
+ns = (10, 10)
 c = SA[-65 -65 -65];
 d = SA[8 8 8];
 C = SA[100 4 100]

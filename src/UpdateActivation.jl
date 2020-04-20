@@ -9,11 +9,12 @@ end
 
 function generate_noise(σ,nn)
 
-	(rand(nn) .- 0.5) .* σ
+	cu((rand(nn) .- 0.5) .* σ)
 
 end
 
 function update_voltage!(v, vr, vt, rec, I, ξ, C, k, δt)
+
 
 	δv = (k .* (v .- vr) .* (v .- vt) .- rec .+ I .+ ξ) ./ C
 

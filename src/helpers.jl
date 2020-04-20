@@ -34,3 +34,9 @@ function Δ(td::Array)
 	collect( td .== 0 )
 	
 end
+
+function Δ(td::CuArrays.CuArray)
+
+	td .== 0
+
+end
