@@ -27,11 +27,11 @@ function run_model()
 	I = [Vector{Float64}(undef,i) for i in nn]
 	ACh = [Vector{Float64}(undef,i) for i in nn]
 	input = [Vector{Float64}(undef,i) for i in nn]
+	input[1] .= input[1] .+ generate_noise(50,nn[1])
 
 	#synapse types
 	synapses = [spzeros(nn[i], nn[i+1]) for i = 1:length(nn)-1]
 	γ = [spzeros(nn[i], nn[i+1]) for i = 1:length(nn)-1]
-	#input = [spzeros(nn[i], nn[i+1]) for i = 1:length(nn)-1]
 
 	# create layers
 	fillcells!(activation,-60.0)
@@ -41,7 +41,6 @@ function run_model()
 	fillcells!(I,250)
 	fillcells!(ACh, 0.0)
 	fillcells!(input, 0.0)
-	#I[1] .= I[1] .+ generate_noise(50,nn[1])
 
 	create_synapses!(synapses, 1)
 	weights = 2 .* synapses
