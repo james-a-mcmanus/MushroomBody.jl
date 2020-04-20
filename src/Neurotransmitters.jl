@@ -1,14 +1,16 @@
-function update_da!(da, BA, τ; δt=1)
+function update_da(da, BA, τ; δt=1)
 
-	δda = (-d ./ τ) .+ BA
+	@bp
 
-	da = δda .* δt
+	δda = (-da ./ τ) .+ BA
+
+	da = da + δda .* δt
 
 end
 
 function update_ACh!(ACh, synt, Φ, t, tpre; δt=1)
 
-	δACh = -ACh ./ synt .+ Δ(t .- tpre)
+	δACh = -ACh ./ synt .+ Φ .* Δ(t .- tpre)
 
 	ACh .= ACh .+ δACh .* δt
 

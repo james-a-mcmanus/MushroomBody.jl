@@ -51,5 +51,6 @@ end=#
 function calc_output!(output, w, ACh, rev, v)
 
 	output .= dropdims(sum((rev .- v) .* w .* ACh, dims = 1),dims=1)
+	# this v should be the v of the current neuron (?)
 
 end
