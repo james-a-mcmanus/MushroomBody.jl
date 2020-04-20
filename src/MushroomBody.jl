@@ -57,7 +57,7 @@ function run_model()
 			if l != length(nn)
 
 				# output functions etc.
-				update_ACh!(ACh[l], synt[l], Φ[l], t, spt[l]) #ACh should be a neuron type...
+				update_ACh!(ACh[l], synt[l], Φ[l], t, spt[l])
 				calc_input!(input[l+1], weights[l], ACh[l], rev[l], activation[l+1])
 				update_weights!(weights[l], γ[l], synapses[l], t, spt[l], spt[l+1], da, tconst[l]; δt=1, A₋=-1, t₋=15)
 
