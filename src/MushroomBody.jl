@@ -20,13 +20,12 @@ function run_model()
 	nn = SA[10, 100, 1]
 	numsteps  = 100
 	in1 = create_input(nn[1], 350:450, numsteps, numsteps, [50,50], 0.8, BAstart=10)
-	run_model(in1)
+	run_model(in1,nn)
 end
 
-function run_model(in1)
+function run_model(in1,nn)
 
 	# preallocating all the parameters
-	nn = SA[10, 100, 1]
 	numsteps  = 100
 
 	# neuron types
