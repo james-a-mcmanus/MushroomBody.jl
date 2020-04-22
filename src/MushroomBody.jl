@@ -13,12 +13,20 @@ include("UpdateActivation.jl")
 include("helpers.jl")
 include("Tests.jl")
 include("input.jl")
-#include("plotters.jl")
+include("plotters.jl")
 
 function run_model()
 
+	nn = SA[500, 1000, 1]
+	numsteps  = 10
+	in1 = create_input(nn[1], 180:220, numsteps, numsteps, [50,50], 0.8, BAstart=10)
+	run_model(in1)
+end
+
+function run_model(in1)
+
 	# preallocating all the parameters
-	nn = SA[10, 100, 1]
+	nn = SA[500, 1000, 1]
 	numsteps  = 10
 
 	# neuron types
@@ -29,7 +37,6 @@ function run_model()
 	I = [Vector{Float64}(undef,i) for i in nn]
 	ACh = [Vector{Float64}(undef,i) for i in nn]
 	input = [Vector{Float64}(undef,i) for i in nn]
-	in1 = create_input(nn[1], 180:220, numsteps, numsteps, [50,50], 0.8, BAstart=10)
 	#synapse types
 	synapses = [spzeros(nn[i], nn[i+1]) for i = 1:length(nn)-1]
 	γ = [spzeros(nn[i], nn[i+1]) for i = 1:length(nn)-1]
@@ -43,6 +50,10 @@ function run_model()
 	fillcells!(I,250)
 	fillcells!(ACh, 0.0)
 	fillcells!(input, 0.0)
+
+	#something here like initialiseplotfunction that takes 
+	#in the function defined at the top 
+	plt = Dashplot()
 
 	create_synapses!(synapses, 1)
 	weights = 2 .* synapses
@@ -67,8 +78,10 @@ function run_model()
 
 			end
 
-
 		end
+
+		dashboard(plt, t, weights[1], activation[1], spt[1], da[1], rec[1])
+
 	end
 end
 end # module

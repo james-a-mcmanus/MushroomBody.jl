@@ -23,6 +23,53 @@ end
 
 function visualiseweights(weights)
 
-	imshow(weights[l])
+	GR.imshow(repeat(weights))
 
+end
+
+
+function dashboard(plt, t, weights, activation, spt, da, rec)
+
+	# hmm this would require mutable struct... maybe not so bad
+	plt.p1 = plotact!(plt.p1, activation)
+	plt.p2 = plotspt!(plt.p2, spt, t)
+	plt.p3 = plotda!(plt.p3, da, t)
+	plt.p4 = plotrec!(plt.p4, rec)
+
+	plot(plt.p1, plt.p2, plt.p3, plt.p4, layout = grid(2,2), legend=false)
+
+end
+
+mutable struct Dashplot
+	p1::Plots.Plot{<:AbstractBackend}
+	p2::Plots.Plot{<:AbstractBackend}
+	p3::Plots.Plot{<:AbstractBackend}
+	p4::Plots.Plot{<:AbstractBackend}
+	Dashplot() = new(heatmap(),heatmap(), scatter(), heatmap())
+end
+
+function initialiseplot(plottype::Function)
+
+	return plottype()
+end
+
+function plotact!(p1, activation)
+
+	heatmap!(p1, activation);
+end
+
+function plotspt!(p2, spt, t)
+
+	spiked = spt.==t
+	heatmap!(p2, reshape(spiked, length(spiked),1));
+
+end
+
+function plotda!(p3, t, da)
+	scatter!(p3, t, da);
+
+end
+
+function plotrec!(p4, rec)
+	heatmap!(p4, reshape(rec,length(rec),1));
 end
