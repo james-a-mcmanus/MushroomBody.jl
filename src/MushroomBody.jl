@@ -23,6 +23,13 @@ function run_model()
 	run_model(in1)
 end
 
+
+function train_model()
+	a=3
+	#some shite here
+end
+
+
 function run_model(in1)
 
 	# preallocating all the parameters
