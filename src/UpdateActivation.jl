@@ -33,10 +33,9 @@ function update_spikes!(v, sp, spt, t, vt, rec, c, d)
 
 	# check spikes
 	sp .= v .> vt
-	#spt[sp] .= t
+	spt[sp] .= t
 	v .= v .* (.! sp) .+ c .* sp # turn all into c if above resting
 	rec .= rec .+ (.! sp) .* d
-	return sp
 
 end
 

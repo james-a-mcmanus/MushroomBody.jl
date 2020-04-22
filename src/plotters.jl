@@ -1,5 +1,5 @@
 # plotting functions
-using Plots
+using Plots, Debugger
 gr()
 
 # this takes a load of spikes and plots them on an animated graph
@@ -33,11 +33,10 @@ function dashboard(plt, t, weights, activation, spt, da, rec)
 	# hmm this would require mutable struct... maybe not so bad
 	plt.p1 = plotact!(plt.p1, activation)
 	plt.p2 = plotspt!(plt.p2, spt, t)
-	plt.p3 = plotda!(plt.p3, da, t)
+	plt.p3 = plotda!(plt.p3, [da], [t])
 	plt.p4 = plotrec!(plt.p4, rec)
-
-	plot(plt.p1, plt.p2, plt.p3, plt.p4, layout = grid(2,2), legend=false)
-
+	p = plot(plt.p1, plt.p2, plt.p3, plt.p4, layout = grid(2,2), legend=false, show=true)
+	display(p)
 end
 
 mutable struct Dashplot
@@ -55,21 +54,21 @@ end
 
 function plotact!(p1, activation)
 
-	heatmap!(p1, activation);
+	heatmap!(p1, reshape(activation, length(activation), 1))
 end
 
 function plotspt!(p2, spt, t)
 
 	spiked = spt.==t
-	heatmap!(p2, reshape(spiked, length(spiked),1));
+	heatmap!(p2, reshape(spiked, length(spiked),1))
 
 end
 
 function plotda!(p3, t, da)
-	scatter!(p3, t, da);
+	scatter!(p3, da, t)
 
 end
 
 function plotrec!(p4, rec)
-	heatmap!(p4, reshape(rec,length(rec),1));
+	heatmap!(p4, reshape(rec,length(rec),1))
 end

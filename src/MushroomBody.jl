@@ -3,7 +3,7 @@ module MushroomBody
 export run_model, create_synapses!, update_weights!, create_input, sim_spikes, test_weight, test_transmission, test_ach, test_da, sparsedensemult, fillcells!, fillentries!, calc_input!,update_activation!, update_γ!
 
 
-using SparseArrays, Debugger
+using SparseArrays
 
 include("UpdateWeights.jl")
 include("initialisers.jl")
@@ -17,17 +17,17 @@ include("plotters.jl")
 
 function run_model()
 
-	nn = SA[500, 1000, 1]
-	numsteps  = 10
-	in1 = create_input(nn[1], 180:220, numsteps, numsteps, [50,50], 0.8, BAstart=10)
+	nn = SA[10, 100, 1]
+	numsteps  = 100
+	in1 = create_input(nn[1], 350:450, numsteps, numsteps, [50,50], 0.8, BAstart=10)
 	run_model(in1)
 end
 
 function run_model(in1)
 
 	# preallocating all the parameters
-	nn = SA[500, 1000, 1]
-	numsteps  = 10
+	nn = SA[10, 100, 1]
+	numsteps  = 100
 
 	# neuron types
 	activation = [Vector{Float64}(undef,i) for i in nn]
@@ -80,8 +80,9 @@ function run_model(in1)
 
 		end
 
-		dashboard(plt, t, weights[1], activation[1], spt[1], da[1], rec[1])
+		dashboard(plt, t, weights[sl], activation[sl], spt[sl], da[sl], rec[sl])
 
 	end
+
 end
 end # module

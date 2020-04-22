@@ -143,6 +143,6 @@ function test_learning()
 	nn = SA[10, 100, 1]
 	numsteps  = 10
 	in1 = create_input(nn[1], 180:220, numsteps, numsteps, [50,50], 0.8, BAstart=10)
-	run_model(in1)	
+	run_model(in1)
 
 end
