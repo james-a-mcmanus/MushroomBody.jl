@@ -1,6 +1,7 @@
 # this page is going to hold all of the setting-up functions 
 # we will need to know how many neurons are in each layer and how many connections there are between each layer
 using Random
+import Base.size, Base.setindex!, Base.getindex
 
 # Function for creating the weights and connections of a layer
 
@@ -22,24 +23,7 @@ function create_synapses(nn; ns=10, weight=2)
 	end
 
 	return (connections, weights)
-
 end
-
-
-#=function create_synapses!(arraytofill::Array{Array}, filler; ns=100)
-
-	for l =1:length(arraytofill)
-
-		postnum = size(arraytofill[l],2)
-		arraytofill[l][1:ns,1:postnum] .= filler
-
-		for i = 1:size(arraytofill[l],2)
-           arraytofill[l][:,i] .= shuffle(arraytofill[l][:,i])
-       	end
-
-	end
-
-end=#
 
 function create_synapses!(arraytofill, filler; ns=10)
 
@@ -70,7 +54,6 @@ function create_synapses!(arraytofill, filler; ns=10)
 		end
 
 	end
-
 end
 
 function fillentries!(sparray, filler)
@@ -83,7 +66,6 @@ function fillentries!(sparray, filler)
 	end
 
 	return sparray
-
 end
 
 function fillcells!(arraytofill, filler)
@@ -94,7 +76,6 @@ function fillcells!(arraytofill, filler)
 		arraytofill[l] .= filler
 
 	end
-
 end
 
 # Function for filling an array full of a specific 
@@ -112,5 +93,12 @@ function create_neurons(nn, filler)
 	
 	end
 	return out
-
 end
+
+struct NeuronLayer{T,1} <: AbstractArray{T,1}
+	data::Array{T,1}
+	dims::NTuple{1,Int}
+end
+
+Base.size(A::NeuronLayer) = A.dims
+Base.getindex(A::NeuronLayer) = 

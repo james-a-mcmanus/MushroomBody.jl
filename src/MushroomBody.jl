@@ -119,7 +119,6 @@ function train_model(in1)
 	for t = 1:numsteps()
 
 	end
-	
 end
 
 function innerlayerupdates!(l, ACh, synt, Φ, t, spt, input, weights, rev, activation, γ, synapses, da, tconst)
@@ -137,7 +136,6 @@ function inputandreward(t, input, in1, da, τ)
 
 	return(BA,da)	
 end
-
 
 
 function initialise_matrices(nn)
