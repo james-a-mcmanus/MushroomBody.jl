@@ -1,6 +1,6 @@
 module MushroomBody
 
-export run_model, create_synapses!, update_weights!, create_input, sim_spikes, test_weight, test_transmission, test_ach, test_da, sparsedensemult, fillcells!, fillentries!, calc_input!,update_activation!, update_γ!
+export run_model, initialise_matrices, Trainer, create_synapses!, update_weights!, create_input, sim_spikes, test_weight, test_transmission, test_ach, test_da, sparsedensemult, fillcells!, fillentries!, calc_input!,update_activation!, update_γ!
 
 
 using SparseArrays
@@ -15,6 +15,21 @@ include("Tests.jl")
 include("input.jl")
 include("plotters.jl")
 
+struct Trainer
+
+	activation
+	rec
+	spiked
+	spt
+	I
+	ACh
+	input
+	synapses
+	weights
+	γ
+	da # da might be a problem for immutability, probably modify in-place
+end
+
 function run_model()
 
 	nn = SA[10, 100, 1]
@@ -23,41 +38,10 @@ function run_model()
 	run_model(in1, nn)
 end
 
-function test_model(in1, weights)
+function run_model(t::Trainer)
 
- 5
-end
+	numsteps = 100
 
-function train_model(in1)
-
-	activation, 
-	rec, 
-	spiked, 
-	spt, 
-	I, 
-	ACh, 
-	input, 
-	synapses,
-	weights,
-	γ, 
-	da = initialise_matrices()
-	
-end
-
-function innerlayerupdates!(l, ACh, synt, Φ, t, spt, input, weights, rev, activation, γ, synapses, da, tconst)
-
-	update_ACh!(ACh[l], synt[l], Φ[l], t, spt[l])
-	calc_input!(input[l+1], weights[l], ACh[l], rev[l], activation[l+1])
-	update_weights!(weights[l], γ[l], synapses[l], t, spt[l], spt[l+1], da, tconst[l]; δt=1, A₋=-1, t₋=15)
-end
-
-function inputandreward(t, input, in1, da, τ)
-
-	input[1] .= in1.inarrayseq[t]==1 ? in1.inarray[1] : input[1]
-	BA = in1.BAseq[t]
-	da = update_da(da, BA, τ)
-
-	return(BA,da)	
 end
 
 function run_model(in1::RandInput, nn; showplot=false)
@@ -105,6 +89,49 @@ function run_model(in1::RandInput, nn; showplot=false)
 
 	return(synapses, weights)
 end
+
+function test_model(in1, weights)
+
+ 5
+end
+
+function train_model(in1)
+
+	activation, 
+	rec, 
+	spiked, 
+	spt, 
+	I, 
+	ACh, 
+	input, 
+	synapses,
+	weights,
+	γ, 
+	da = initialise_matrices()
+
+	for t = 1:numsteps()
+
+	end
+	
+end
+
+function innerlayerupdates!(l, ACh, synt, Φ, t, spt, input, weights, rev, activation, γ, synapses, da, tconst)
+
+	update_ACh!(ACh[l], synt[l], Φ[l], t, spt[l])
+	calc_input!(input[l+1], weights[l], ACh[l], rev[l], activation[l+1])
+	update_weights!(weights[l], γ[l], synapses[l], t, spt[l], spt[l+1], da, tconst[l]; δt=1, A₋=-1, t₋=15)
+end
+
+function inputandreward(t, input, in1, da, τ)
+
+	input[1] .= in1.inarrayseq[t]==1 ? in1.inarray[1] : input[1]
+	BA = in1.BAseq[t]
+	da = update_da(da, BA, τ)
+
+	return(BA,da)	
+end
+
+
 
 function initialise_matrices(nn)
 
