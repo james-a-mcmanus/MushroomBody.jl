@@ -26,7 +26,7 @@ tconst = SA[40, 40, 40]
 rev = SA[0, 0, 0]
 da = [0 0 0]
 Φ = [0.5, 0.5, 0.5]
-τ = [20 20 20]
+τ = 20
 miniw = 0;
 
 [true false true]
