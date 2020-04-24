@@ -1,59 +1,60 @@
 # this page is going to hold all of the setting-up functions 
 # we will need to know how many neurons are in each layer and how many connections there are between each layer
-using Random
-import Base.size, Base.setindex!, Base.getindex
+using Random, BenchmarkTools
+import Base.size, Base.setindex!, Base.getindex, Base.zero
 
-# Function for creating the weights and connections of a layer
+#-------------------------------------------------------------------------------------------------------#
+#											Type Definitions
+#-------------------------------------------------------------------------------------------------------#
 
-function create_synapses(nn; ns=10, weight=2)
-
-	connections = Vector{Array}(undef, length(nn)-1)
-	weights = Vector{Array}(undef, length(nn)-1)
-
-	for l = 1:length(nn)-1
-
-		connections[l] = zeros(nn[l],nn[l+1])
-		syns = ones(ns, nn[l+1])
-		connections[l][1:ns, 1:nn[l+1]] .= syns
-
-
-		connections[l] .= connections[l][shuffle(1:end),:]
-		weights[l] = weight .* connections[l]
-
-	end
-
-	return (connections, weights)
+struct NeuronLayer{T,N} <: AbstractArray{T,N}
+	data::Array{T,1}
+	dims::NTuple{1,Int}
 end
 
-function create_synapses!(arraytofill, filler; ns=10)
+struct NeuronLayers{T,N}
+	layers::Array{NeuronLayer{T,N},1}
+end
 
-	# if any(ns .> size(arraytofill[:](1)))
+struct SynapseLayer{T,N} <: AbstractArray{T,N}
+	data::Array{T,N}
+	dims::NTuple{N,Int}
+#	connections::Array{Int,N} # or bool?
+end
 
-	# 	println("That matrix doesn't look very sparse!")
+struct SynapseLayers{T,N} 
+	layers::Array{SynapseLayer{T,N},1}
+end
+#-------------------------------------------------------------------------------------------------------#				
+#-------------------------------------------------------------------------------------------------------#
 
-	# end
+function create_synapses(::Type{SynapseLayer}, lyrsize::NTuple{2,Int}; syndens=0.1, weight=2)
 
-	for l =1:length(arraytofill)
+	syns = SynapseLayer(zeros(lyrsize...))
+	ns = Int(round(syndens*lyrsize[1]))
+	cons = Array{Int,2}(undef,ns,lyrsize[2])
 
-		prenum, postnum = size(arraytofill[l])
-
-		i = Array{Int,1}(undef, ns*postnum)
-		
-		for ii = 1:postnum
-           i[1 + (ii-1) * ns: (ii-1)*ns + ns] .= shuffle(1:prenum)[1:ns]#vcat(out, shuffle(1:prenum)[1:ns])
-       	end
-		
-		j = repeat(collect(1:postnum),inner=ns)
-		
-		v = repeat([filler],outer=ns*postnum)
-
-		for ii =1:length(i)
-
-			arraytofill[l][i[ii],j[ii]] = v[ii]
-
-		end
-
+	for i = 1:lyrsize[2]
+		cons[:,i] .= shuffle(1:lyrsize[1])[1:ns]
 	end
+
+	for postlyr = 1:lyrsize[2]
+		syns[cons[:,postlyr],postlyr] .= weight
+	end
+
+	return syns, cons
+end
+
+function create_synapses(::Type{SynapseLayers}, nn::Array; syndens=0.1, weight=2)
+
+	lyrsizes = [(nn[i],nn[i+1]) for i = 1:length(nn)-1]
+	SynapseLayers([create_synapses(SynapseLayer, lrs) for lrs in lyrsizes])
+end
+
+function fill_synapses(::Type{SynapseLayers}, nn::Array, filler::T) where T
+
+	lyrsizes = [(nn[i],nn[i+1]) for i = 1:length(nn)-1]
+	SynapseLayers([SynapseLayer(filler, lrs) for lrs in lyrsizes])
 end
 
 function fillentries!(sparray, filler)
@@ -95,10 +96,27 @@ function create_neurons(nn, filler)
 	return out
 end
 
-struct NeuronLayer{T,1} <: AbstractArray{T,1}
-	data::Array{T,1}
-	dims::NTuple{1,Int}
-end
 
-Base.size(A::NeuronLayer) = A.dims
-Base.getindex(A::NeuronLayer) = 
+Base.size(A::Union{NeuronLayer,SynapseLayer}) = A.dims
+Base.getindex(A::NeuronLayer{T,N}, Ind::Int) where {T,N} = get(A.data, Ind, nothing)
+Base.setindex!(A::NeuronLayer, filler, Ind::Int) where {T,N} = (A.data[Ind] = filler)
+Base.zero(::Type{NeuronLayer{T,N}}) where {T<:Number,N} = NeuronLayer{T,N}([zero(T)],(1,))
+ NeuronLayer(::Type{T}, len::Integer) where {T} = NeuronLayer{T,1}(Array{T,1}(undef, len), (len,))
+NeuronLayer(filler::T, len::Integer) where T = NeuronLayer{T,1}(fill(filler,len), (len,))
+
+#=Base.getindex(A::SynapseLayer{T,N}, Ind::Vararg{Int,N}) where {T,N} = get(A.data, Ind, nothing)
+Base.getindex(A::SynapseLayer{T,N}, Ind) where {T,N} = a.data[Ind]
+
+Base.setindex!(A::SynapseLayer{T,N}, filler, Ind::Int) where {T,N} = A.data[Ind] = filler
+Base.setindex!(A::SynapseLayer{T,N}, filler, Ind::Vararg{Int,N}) where {T,N} = Base.setindex!(A, filler, Ind)
+Base.setindex!(A::SynapseLayer{T,N}, filler, Ind::NTuple{N,Int}) where {T,N} = A.data[Ind...] = filler=#
+
+
+Base.zero(::Type{SynapseLayer{T,N}}) where {T<:Number, N} = SynapseLayer{T,N}(zeros(Int,ntuple(x->1,N)),ntuple(x->1,N))
+Base.getindex(A::SynapseLayer{T,N}, I::Vararg{Int,N}) where {T,N} = A.data[I...]
+Base.setindex!(A::SynapseLayer{T,N}, filler, I::Vararg{Int,N}) where {T,N} = A.data[I...] = filler
+
+
+SynapseLayer{T,N}(A::Array{T,N}) where {T,N} = SynapseLayer{T,N}(A,size(A))
+SynapseLayer(A::Array{T,N}) where {T,N} = SynapseLayer{T,N}(A)
+SynapseLayer(filler::T, dims::NTuple{N,Int}) where {T,N} = SynapseLayer{T,N}(fill(filler, dims))

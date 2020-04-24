@@ -4,6 +4,7 @@ authors = ["james-a-mcmanus"]
 version = "0.1.0"
 
 [deps]
+BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
 Debugger = "31a5f54b-26ea-5ae9-a837-f05ce5417438"
 FileIO = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549"
 GR = "28b8d3ca-fb5f-59d9-8090-bfdbd6d07a71"

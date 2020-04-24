@@ -1,6 +1,6 @@
 module MushroomBody
 
-export run_model, initialise_matrices, Trainer, create_synapses!, update_weights!, create_input, sim_spikes, test_weight, test_transmission, test_ach, test_da, sparsedensemult, fillcells!, fillentries!, calc_input!,update_activation!, update_γ!
+export run_model, NeuronLayer, NeuronLayers, SynapseLayers, SynapseLayer, create_synapses, initialise_matrices, initialise_matrices_old, Trainer, create_synapses!, update_weights!, create_input, sim_spikes, test_weight, test_transmission, test_ach, test_da, sparsedensemult, fillcells!, fillentries!, calc_input!,update_activation!, update_γ!
 
 
 using SparseArrays
@@ -140,6 +140,23 @@ end
 
 function initialise_matrices(nn)
 
+	activation = NeuronLayers([NeuronLayer(-60.0, i) for i in nn])
+	rec = NeuronLayers([NeuronLayer(0.0, i) for i in nn])
+	spiked = NeuronLayers([NeuronLayer(false, i) for i in nn])
+	spt = NeuronLayers([NeuronLayer(Int(-1), i) for i in nn])
+	I = NeuronLayers([NeuronLayer(250.0, i) for i in nn])
+	ACh = NeuronLayers([NeuronLayer(0.0, i) for i in nn])
+	input = NeuronLayers([NeuronLayer(0.0, i) for i in nn])
+
+	synapses = create_synapses(SynapseLayers,nn)
+	γ = fill_synapses(SynapseLayers, nn, 0.0)
+
+end
+
+
+
+function initialise_matrices_old(nn)
+
 	# neuron types
 	activation = [Vector{Float64}(undef,i) for i in nn]
 	rec = [Vector{Float64}(undef,i) for i in nn]
@@ -149,9 +166,9 @@ function initialise_matrices(nn)
 	ACh = [Vector{Float64}(undef,i) for i in nn]
 	input = [Vector{Float64}(undef,i) for i in nn]
 	#synapse types
-	synapses = [spzeros(nn[i], nn[i+1]) for i = 1:length(nn)-1]
+#=	synapses = [spzeros(nn[i], nn[i+1]) for i = 1:length(nn)-1]
 	γ = [spzeros(nn[i], nn[i+1]) for i = 1:length(nn)-1]
-	da = 0.0
+	da = 0.0=#
 
 	# create layers
 	fillcells!(activation,-60.0)
@@ -162,10 +179,9 @@ function initialise_matrices(nn)
 	fillcells!(ACh, 0.0)
 	fillcells!(input, 0.0)
 
-	create_synapses!(synapses, 1)
+#=	create_synapses!(synapses, 1)
 	weights = 2 .* synapses	
-
-	return activation, rec, spiked, spt, I, ACh, input, synapses, weights, γ, da
+=#
 end
 
 end # module
