@@ -1,9 +1,7 @@
-#=module UpdateWeights
+function update_weights!(t, l, m, p, da)
 
-export update_weights!, update_γ!, Δ, stdp=#
-
-function update_weights!(w, γ, connections, t, tpre, tpost, da, tconst; δt=1, A₋=-1, t₋=15)
-
+	tconst, A₋, t₋, δt = get_parameters(update_weights!, p, l)
+	w, γ, connections, tpre, tpost = get_matrices(update_weights!, m, l)
 
 	γ .= update_γ!(γ, connections, t, tpre, tpost, tconst, A₋, t₋, δt) # update tag
 
@@ -11,7 +9,6 @@ function update_weights!(w, γ, connections, t, tpre, tpost, da, tconst; δt=1, 
 
 	w .= w .+ δw .* δt # also need to have a maximum and minimum weight
 	w[w .< miniw] .= miniw
-
 end
 
 function update_γ!(γ, connections, t, tpre, tpost, tconst, A₋, t₋, δt)
@@ -27,5 +24,4 @@ end
 function stdp(latency, A₋, t₋)
 
 	(latency .!= 0) .* A₋ .* exp.(latency ./ t₋) # punishes neurnos where pre fired after post
-
 end
