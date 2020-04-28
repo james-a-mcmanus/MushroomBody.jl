@@ -107,7 +107,7 @@ SynapseLayer(filler::T, dims::NTuple{N,Int}) where {T,N} = SynapseLayer{T,N}(fil
 #-------------------------------------------------------------------------------------------------------#
 #										Initialising Functions
 #-------------------------------------------------------------------------------------------------------#
-function create_synapses(::Type{SynapseLayer}, lyrsize::NTuple{2,Int}; syndens=0.1, weight=2)
+function create_synapses(::Type{SynapseLayer}, lyrsize::NTuple{2,Int}; syndens=0.1, weight=2.0)
 
 	syns = SynapseLayer(zeros(lyrsize...))
 	ns = Int(round(syndens*lyrsize[1]))
@@ -162,7 +162,6 @@ function fillcells!(arraytofill, filler)
 	end
 end
 
-# Function for filling an array full of a specific 
 function create_neurons(nn, filler)
 
 	out = []
@@ -178,4 +177,5 @@ function create_neurons(nn, filler)
 	end
 	return out
 end
+
 #-------------------------------------------------------------------------------------------------------#

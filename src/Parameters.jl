@@ -37,6 +37,11 @@ struct MatrixTypes
 	γ::SynapseLayers
 end
 
+struct NeuroTransmitter
+	da::Array
+	BA::Array
+end
+
 function get_parameters()
 
 	nn = (20, 100, 1)
@@ -59,7 +64,7 @@ function get_parameters()
 	rev = (0, 0, 0)
 	Φ = (0.5, 0.5, 0.5)
 	τ = (20, 20, 20)
-	miniw = (0, 0 ,0)
+	miniw = (0.0, 0.0 ,0.0)
 	σ = (0.05, 0.05, 0.05)
 	δt = 1
 
@@ -78,31 +83,31 @@ function initialise_matrices(nn)
 	ACh = NeuronLayers([NeuronLayer(0.0, i) for i in nn])
 	input = NeuronLayers([NeuronLayer(0.0, i) for i in nn])
 
-	synapses = create_synapses(SynapseLayers,nn)
-	weights = clone_synapses(synapses)
+	weights = create_synapses(SynapseLayers,nn)
+	synapses = clone_synapses(weights)
 	γ = fill_synapses(SynapseLayers, nn, 0.0)
 
 	return activation, rec, spiked, spt, I, ACh, input, synapses, weights, γ
 end
 
-function get_parameters(f::typeof(update_activation!), p::ParameterTypes; l::Int=1)
+function get_parameters(f::typeof(update_activation!), p::ParameterTypes, l::Int=1)
 
-	return (p.vt[l], p.C[l], p.a[l], p.b[l], p.c[l], p.d[l], p.k[l], p.σ, p.δt)
+	return (p.vt[l], p.vr[l], p.C[l], p.a[l], p.b[l], p.c[l], p.d[l], p.k[l], p.σ[l], p.δt)
 end
 
 function get_parameters(f::typeof(update_weights!), p::ParameterTypes, l::Int=1)
 
-	return (p.tconst[l], p.A₋[l], p.t₋[l], p.δt)
+	return (p.tconst[l], p.A₋[l], p.t₋[l], p.miniw[l], p.δt)
 end
 
-function get_parameters(f::typeof(update_weights!), p::ParameterTypes, l::Int=1)
+function get_parameters(f::typeof(update_ACh!), p::ParameterTypes, l::Int=1)
 
 	return (p.Φ[l], p.synt[l], p.δt)
 end
 
 function get_matrices(f::typeof(update_activation!), m::MatrixTypes, l::Int=1)
 
-	return (m.activation.layers[l], m.vr.layers[l], m.spiked.layers[l], m.spt.layers[l], m.rec.layers[l], m.input.layers[l])
+	return (m.activation.layers[l], m.spiked.layers[l], m.spt.layers[l], m.rec.layers[l], m.input.layers[l])
 end
 
 function get_matrices(f::typeof(update_weights!), m::MatrixTypes, l::Int=1)
@@ -117,8 +122,5 @@ end
 
 function get_matrices(f::typeof(calc_input!), m::MatrixTypes, l::Int=1)
 
-	return (m.input.layers[l+1], m.weights.layers[l], m.ACh.layers[l], m.activation.layers[l])
+	return (m.input.layers[l+1], m.weights.layers[l], m.ACh.layers[l], m.activation.layers[l+1])
 end
-
-
-da = [0, 0, 0]

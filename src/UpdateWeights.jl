@@ -1,23 +1,25 @@
 function update_weights!(t, l, m, p, da)
 
-	tconst, A₋, t₋, δt = get_parameters(update_weights!, p, l)
+	tconst, A₋, t₋, miniw, δt = get_parameters(update_weights!, p, l)
 	w, γ, connections, tpre, tpost = get_matrices(update_weights!, m, l)
 
-	γ .= update_γ!(γ, connections, t, tpre, tpost, tconst, A₋, t₋, δt) # update tag
+	update_γ!(γ, connections, t, tpre, tpost, tconst, A₋, t₋, δt) # update tag
 
-	δw = γ .* da # update weights based on da and tag
+	w .= @. w + (γ * da) * δt
 
-	w .= w .+ δw .* δt # also need to have a maximum and minimum weight
 	w[w .< miniw] .= miniw
 end
 
 function update_γ!(γ, connections, t, tpre, tpost, tconst, A₋, t₋, δt)
 
-	latency = (tpre .- tpost') .* connections
+#=	latency = (tpre .- tpost') .* connections
 
-	δγ = (-γ ./ tconst) .+ stdp(latency, A₋, t₋) .* Δ( (t .- tpre) .* (t .- tpost') )
+	δγ = @. (-γ / tconst) + stdp(latency, A₋, t₋) * Δ( (t - tpre) * (t - tpost') )
 
-	γ .= γ .+ δγ .* δt
+	γ .= γ .+ δγ .* δt=#
+
+	γ .= @. γ + δt * ( (-γ / tconst) + stdp(((tpre - tpost') * connections), A₋, t₋) * Δ( (t - tpre) * (t - tpost') ) )
+
 end
 
 

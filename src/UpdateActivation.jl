@@ -1,8 +1,8 @@
 # this is going to hold the main updating functions e.g. upduate activation etc.
 function update_activation!(t, layer, nn, matrices, parameters)
 
-	vt, C, a, b, c, d, k, σ, δt = get_parameters(update_activation!,parameters,layer)
-	v, vr, sp, spt, rec, I = get_matrices(update_activation!, matrices, layer)
+	vt, vr, C, a, b, c, d, k, σ, δt = get_parameters(update_activation!,parameters,layer)
+	v, sp, spt, rec, I = get_matrices(update_activation!, matrices, layer)
 
 	ξ = generate_noise(σ,nn)
 	update_voltage!(v, vr, vt, rec, I, ξ, C, k, δt)
@@ -50,11 +50,10 @@ function calc_output!(output, w, ACh, rev, v)
 
 end=#
 
-function calc_input!(l, m, p)
+function calc_input!(l, m, p; rev=0)
 
 	input, w, ACh, v = get_matrices(calc_input!, m, l)
 
-	input .= dropdims(sum(w .* ACh .* (rev .- v)', dims = 1), dims=1)
-	# this v should be the v of the current neuron (?)
+	input .= dropdims(sum( @.(w * ACh * (rev - v)'), dims=1), dims=1) #dropdims(sum(w .* ACh .* (rev .- v)', dims = 1), dims=1)
 
 end
