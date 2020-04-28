@@ -12,8 +12,8 @@ include("Neurotransmitters.jl")
 include("helpers.jl")
 include("Tests.jl")
 include("input.jl")
-include("plotters.jl")
 include("Parameters.jl")
+include("plotters.jl")
 
 struct NeurotransmitterTypes
 	da::Number
@@ -22,12 +22,12 @@ end
 
 function run_model()
 
-	nn = [1_000, 10_000, 1]
+	nn = [100, 1_000, 1]
 	numsteps  = 100
 	in1 = create_input(nn[1], 350:450, numsteps, numsteps, [50,50], 0.8, BAstart=10)
 
-	train_model(in1,nn,numsteps)
-
+	weights = train_model(in1,nn,numsteps)
+	test_model(in1,nn,numsteps,weights)
 end
 
 function run_model(in1::RandInput, nn; showplot=false)
@@ -72,16 +72,34 @@ function run_model(in1::RandInput, nn; showplot=false)
 		end
 
 		sl=1
-		dashboard(plt, t, weights[sl], activation[sl], spt[sl], da, rec[sl])
+		dashboard(plt, t, sl, m, da)
 
 	end
 
 	return(synapses, weights)
 end
 
-function test_model(in1, weights)
+function test_model(in1, nn, numsteps, weights)
 
- 5
+	m = MatrixTypes(initialise_matrices(nn, weights)...)
+	p = get_parameters()
+	da = 0
+	
+	plt = Dashplot()
+
+	for t = 1:numsteps
+	
+		BA, da = inputandreward!(t, m.input.layers[1], in1, p.τ[1], da=da)
+		for layer = 1:length(nn)
+			update_activation!(t, layer, nn, m, p) #these haven't been defined: maybe have another get function for these?
+			if layer !== length(nn)
+				update_ACh!(t, layer, m, p, da)
+				calc_input!(layer, m, p)
+			end
+			sl=1
+			dashboard(plt, t, sl, m, da)
+		end
+	end
 end
 
 function train_model(in1, nn, numsteps)
@@ -104,6 +122,7 @@ function train_model(in1, nn, numsteps)
 			end
 		end
 	end
+	return m.weights
 end
 
 function inputandreward!(t, input, in1, τ; da=0)

@@ -90,6 +90,22 @@ function initialise_matrices(nn)
 	return activation, rec, spiked, spt, I, ACh, input, synapses, weights, γ
 end
 
+function initialise_matrices(nn, weights::SynapseLayers)
+
+	activation = NeuronLayers([NeuronLayer(-60.0, i) for i in nn])
+	rec = NeuronLayers([NeuronLayer(0.0, i) for i in nn])
+	spiked = NeuronLayers([NeuronLayer(false, i) for i in nn])
+	spt = NeuronLayers([NeuronLayer(Int(-1), i) for i in nn])
+	I = NeuronLayers([NeuronLayer(250.0, i) for i in nn])
+	ACh = NeuronLayers([NeuronLayer(0.0, i) for i in nn])
+	input = NeuronLayers([NeuronLayer(0.0, i) for i in nn])
+
+	synapses = clone_synapses(weights)
+	γ = fill_synapses(SynapseLayers, nn, 0.0)
+
+	return activation, rec, spiked, spt, I, ACh, input, synapses, weights, γ
+end
+
 function get_parameters(f::typeof(update_activation!), p::ParameterTypes, l::Int=1)
 
 	return (p.vt[l], p.vr[l], p.C[l], p.a[l], p.b[l], p.c[l], p.d[l], p.k[l], p.σ[l], p.δt)

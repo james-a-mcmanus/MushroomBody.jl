@@ -30,13 +30,23 @@ end
 
 function dashboard(plt, t, weights, activation, spt, da, rec)
 
-	# hmm this would require mutable struct... maybe not so bad
 	plt.p1 = plotact!(plt.p1, activation)
 	plt.p2 = plotspt!(plt.p2, spt, t)
 	plt.p3 = plotda!(plt.p3, [da], [t])
 	plt.p4 = plotrec!(plt.p4, rec)
 	p = plot(plt.p1, plt.p2, plt.p3, plt.p4, layout = grid(2,2), legend=false, show=true)
 	display(p)
+end
+
+function dashboard(plt, t, l, m::MatrixTypes, da)
+
+	plt.p1 = plotact!(plt.p1, m.activation.layers[l])
+	plt.p2 = plotspt!(plt.p2, m.spt.layers[l], t)
+	plt.p3 = plotda!(plt.p3, [da], [t])
+	plt.p4 = plotrec!(plt.p4, m.rec.layers[l])
+	p = plot(plt.p1, plt.p2, plt.p3, plt.p4, layout = grid(2,2), legend=false, show=true)
+	display(p)
+
 end
 
 mutable struct Dashplot
