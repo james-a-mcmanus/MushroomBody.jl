@@ -89,25 +89,80 @@ SpikePlot(m::MatrixTypes) = SpikePlot(scatter())
 
 
 """
+
+"""
+
+
+
+"""
 Plots the neurons and their static connections
 """
-function networkplot(nn, connections)
 
-	p, ycoords, xcoords = neuronplot(nn)
-	plot(p)
+function networkplot(nn, connections::SynapseLayers)
+
+	p = plot()
+	ycoords, xcoords = neuronplot!(p, nn)
+	for i in 1:length(nn)-1
+		y = (ycoords[i], ycoords[i+1])
+		x = (xcoords[i], xcoords[i+1])
+		plotconnections!(p, y, x, connections[i])
+	end
+
+	return p
+end
+
+function networkplot(nn, connections::SynapseLayers, weights::SynapseLayers; maxneurons=50)
+
+	p = plot(framestyle=:none)
+
+	nn = min.(maxneurons, nn)
+	ycoords, xcoords = neuronplot!(p, nn)
 
 	for i in 1:length(nn)-1
 		y = (ycoords[i], ycoords[i+1])
 		x = (xcoords[i], xcoords[i+1])
-		plotconnections(p, y, x, connections[i])
+
+		viewcons = connections.layers[i].data[1:nn[i],1:nn[i+1]]
+		viewweights = weights.layers[i].data[1:nn[i],1:nn[i+1]]
+
+		plotconnections!(p, y, x, viewcons, viewweights)
 	end
-	display(p)
+
+	return p	
+end
+
+function networkplot(nn, connections::SynapseLayers, weights::SynapseLayers, spiked::NeuronLayers; maxneurons=50)
+
+	p = plot(framestyle=:none);
+
+	nn = min.(maxneurons, nn)
+	ycoords, xcoords = neuronplot!(p, nn)
+
+	for i in 1:length(nn)-1
+		y = (ycoords[i], ycoords[i+1])
+		x = (xcoords[i], xcoords[i+1])
+
+		viewcons = connections.layers[i].data[1:nn[i],1:nn[i+1]]
+		viewweights = weights.layers[i].data[1:nn[i],1:nn[i+1]]
+		viewspiked = spiked.layers[i].data[1:nn[i]] .* viewcons
+
+		plotconnections!(p, y, x, viewcons, viewweights, viewspiked)
+	end
+
+	return p
+end
+
+function shownetwork(t, nn, m::MatrixTypes; framerate=2)
+
+	if t%framerate==0
+		display(networkplot(nn, m.synapses, m.weights, m.spiked))
+	end
 end
 
 """
 This returns a plot of circles marking location of neurons.
 """
-function neuronplot(nn)
+function neuronplot!(p, nn)
 
 
 	numlayers = length(nn)
@@ -124,25 +179,71 @@ function neuronplot(nn)
 	ylims = [-maxmkr/5, maxn + maxmkr/5]
 	xlims = [1-maxmkr/50, numlayers + maxmkr/50]
 
-	p = scatter(xcoords, ycoords, markersize=markersizes, legend=false, ylim=ylims, xlim=xlims, framestyle=:none)
-	return (p, ys, xs)
+	scatter!(p, xcoords, ycoords, markersize=markersizes, legend=false, ylim=ylims, xlim=xlims)
+	return (ys, xs)
 end
+
 
 """
 Plot the ntework connections
 """
-plotconnections(p, ycoords, xcoords, connections::Array{Int,<:Any}) = plotconnections(p, ycoords, xcoords,connections .== 1)
-function plotconnections(p, ycoords, xcoords, connections) 
+plotconnections!(p, ycoords, xcoords, connections::SynapseLayer) = plotconnections!(p, ycoords, xcoords,connections.data .== 1)
+
+function plotconnections!(p, ycoords, xcoords, connections)
 
 	allconnections = vcat.(ycoords[1], ycoords[2]')
 	allxs = vcat.(xcoords[1], xcoords[2]')
 
-	allconnections[connections]
-	plot!(p,allxs[connections],allconnections[connections],legend=false, linecolor=RGB(0.5,0.5,0.5), linealpha=0.9)
+	linexs = allxs[connections]
+	lineys = allconnections[connections]
+
+	for i in 1:length(linexs)
+		plot!(p,linexs[i],lineys[i],legend=false, linecolor=RGB(0.5,0.5,0.5), linealpha=0.9)
+	end
+end
+
+plotconnections!(p, ycoords, xcoords, connections::SynapseLayer, weights::SynapseLayer) = plotconnections!(p, ycoords, xcoords, connections.data .==1, weights.data)
+plotconnections!(p, ycoords, xcoords, connections::Array{<:Number,<:Any}, weights::Array{<:Number,<:Any}) = plotconnections!(p, ycoords, xcoords, connections .==1, weights)
+plotconnections!(p, ycoords, xcoords, connections::Array{<:Number,<:Any}, weights::Array{<:Number,<:Any}, spiked::Array{<:Number, <:Any}) = plotconnections!(p, ycoords, xcoords, connections .==1, weights, spiked .== 1)
+
+
+function plotconnections!(p, ycoords, xcoords, connections, weights)
+
+	allconnections = vcat.(ycoords[1], ycoords[2]')
+	allxs = vcat.(xcoords[1], xcoords[2]')
+
+	linexs = allxs[connections]
+	lineys = allconnections[connections]
+	linewidths = weights[connections]
+
+	for i in 1:length(linexs)
+		plot!(p,linexs[i],lineys[i],legend=false, linecolor=RGB(0.5,0.5,0.5), linealpha=0.9, linewidth=linewidths[i])
+	end
+end
+
+function plotconnections!(p, ycoords, xcoords, connections, weights, spikers)
+
+	
+	allconnections = vcat.(ycoords[1], ycoords[2]')
+	allxs = vcat.(xcoords[1], xcoords[2]')
+
+	spikexs = allxs[spikers]
+	spikeys= allconnections[spikers]
+
+	linexs = allxs[connections]
+	lineys = allconnections[connections]
+	linewidths = weights[connections]
+
+	for i in 1:length(linexs)
+		plot!(p,linexs[i],lineys[i], legend=false, linecolor=RGB(0.5,0.5,0.5), linealpha=0.9, linewidth=linewidths[i])
+	end
+	
+	plot!(p, spikexs, spikeys, legend=false, linecolor=RGB(0.9,0.1,0.1))
+
 end
 
 
 """
 for axis with limits 1-n, what is the ideal marker size for n neurons to all show up
 """
-neuronmarkersize(numneurons) = 150 ./ numneurons
+neuronmarkersize(numneurons) = 150 ./ (numneurons .+ 2)
