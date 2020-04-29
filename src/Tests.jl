@@ -144,5 +144,26 @@ function test_learning()
 	numsteps  = 10
 	in1 = create_input(nn[1], 180:220, numsteps, numsteps, [50,50], 0.8, BAstart=10)
 	run_model(in1)
-
 end
+
+
+#=@userplot CirclePlot
+@recipe function f(cp::CirclePlot)
+    x, y, i = cp.args
+    n = length(x)
+    inds = circshift(1:n, 1 - i)
+    linewidth --> range(0, 10, length = n)
+    seriesalpha --> range(0, 1, length = n)
+    aspect_ratio --> 1
+    label --> false
+    x[inds], y[inds]
+end
+
+n = 150
+t = range(0, 2π, length = n)
+x = sin.(t)
+y = cos.(t)
+
+for i ∈ 1:n
+    display(circleplot(x, y, i))
+end=#

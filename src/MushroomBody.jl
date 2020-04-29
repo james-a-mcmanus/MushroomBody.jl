@@ -1,6 +1,6 @@
 module MushroomBody
 
-export run_model, train_model, get_parameters, MatrixTypes, NeuronLayer, clone_synapses, NeuronLayers, ConnectionLayer, SynapseLayers, SynapseLayer, create_synapses, initialise_matrices, initialise_matrices_old, Trainer, create_synapses!, update_weights!, create_input, sim_spikes, test_weight, test_transmission, test_ach, test_da, sparsedensemult, fillcells!, fillentries!, calc_input!,update_activation!, update_γ!
+export run_model, networkplot, plotconnections, Dashplot, train_model, get_parameters, MatrixTypes, NeuronLayer, clone_synapses, NeuronLayers, ConnectionLayer, SynapseLayers, SynapseLayer, create_synapses, initialise_matrices, initialise_matrices_old, Trainer, create_synapses!, update_weights!, create_input, sim_spikes, test_weight, test_transmission, test_ach, test_da, sparsedensemult, fillcells!, fillentries!, calc_input!,update_activation!, update_γ!
 
 
 using SparseArrays
