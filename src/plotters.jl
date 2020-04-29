@@ -88,12 +88,26 @@ end
 SpikePlot(m::MatrixTypes) = SpikePlot(scatter())
 
 
+"""
+Plots the neurons and their static connections
+"""
+function networkplot(nn, connections)
 
+	p, ycoords, xcoords = neuronplot(nn)
+	plot(p)
+
+	for i in 1:length(nn)-1
+		y = (ycoords[i], ycoords[i+1])
+		x = (xcoords[i], xcoords[i+1])
+		plotconnections(p, y, x, connections[i])
+	end
+	display(p)
+end
 
 """
 This returns a plot of circles marking location of neurons.
 """
-function networkplot(nn)
+function neuronplot(nn)
 
 
 	numlayers = length(nn)
@@ -114,18 +128,17 @@ function networkplot(nn)
 	return (p, ys, xs)
 end
 
-
+"""
+Plot the ntework connections
+"""
 plotconnections(p, ycoords, xcoords, connections::Array{Int,<:Any}) = plotconnections(p, ycoords, xcoords,connections .== 1)
-
 function plotconnections(p, ycoords, xcoords, connections) 
 
 	allconnections = vcat.(ycoords[1], ycoords[2]')
 	allxs = vcat.(xcoords[1], xcoords[2]')
 
 	allconnections[connections]
-	plot(p)
-	plot!(allxs[connections],allconnections[connections],legend=false, linecolor=RGB(0.5,0.5,0.5), linealpha=0.9)
-
+	plot!(p,allxs[connections],allconnections[connections],legend=false, linecolor=RGB(0.5,0.5,0.5), linealpha=0.9)
 end
 
 
