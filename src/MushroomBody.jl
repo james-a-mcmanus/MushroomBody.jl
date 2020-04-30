@@ -3,7 +3,7 @@ module MushroomBody
 export run_model, networkplot, neuronplot!, plotconnections!, Dashplot, train_model, get_parameters, MatrixTypes, NeuronLayer, clone_synapses, NeuronLayers, ConnectionLayer, SynapseLayers, SynapseLayer, create_synapses, initialise_matrices, initialise_matrices_old, Trainer, create_synapses!, update_weights!, create_input, sim_spikes, test_weight, test_transmission, test_ach, test_da, sparsedensemult, fillcells!, fillentries!, calc_input!,update_activation!, update_γ!
 
 
-using SparseArrays
+using SparseArrays, Infiltrator
 
 include("UpdateWeights.jl")
 include("UpdateActivation.jl")
@@ -23,11 +23,11 @@ end
 function run_model()
 
 	nn = [100, 1_000, 5]
-	numsteps  = 100
+	numsteps  = 50
 	in1 = create_input(nn[1], 350:450, numsteps, numsteps, [50,50], 0.8, BAstart=10)
 
-	weights = train_model(in1,nn,numsteps, showplot=true)
-	test_model(in1,nn,numsteps,weights)
+	weights, synapses = train_model(in1,nn,numsteps, showplot=true)
+	test_model(in1,nn,numsteps,weights, synapses)
 end
 
 function run_model(in1::RandInput, nn; showplot=false)
@@ -79,9 +79,9 @@ function run_model(in1::RandInput, nn; showplot=false)
 	return(synapses, weights)
 end
 
-function test_model(in1, nn, numsteps, weights; showplot=true)
+function test_model(in1, nn, numsteps, weights, synapses; showplot=true)
 
-	m = MatrixTypes(initialise_matrices(nn, weights)...)
+	m = MatrixTypes(initialise_matrices(nn, weights, synapses)...)
 	p = get_parameters()
 	da = 0
 
@@ -121,10 +121,11 @@ function train_model(in1, nn, numsteps; showplot=false)
 			end
 		end
 
-		showplot ? shownetwork(t, nn, m) : nothing
 
+
+		showplot ? shownetwork(t, nn, m) : nothing
 	end
-	return m.weights
+	return (m.weights, m.synapses)
 end
 
 function inputandreward!(t, input, in1, τ; da=0)

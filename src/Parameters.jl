@@ -90,7 +90,7 @@ function initialise_matrices(nn)
 	return activation, rec, spiked, spt, I, ACh, input, synapses, weights, γ
 end
 
-function initialise_matrices(nn, weights::SynapseLayers)
+function initialise_matrices(nn, weights::SynapseLayers, synapses::SynapseLayers)
 
 	activation = NeuronLayers([NeuronLayer(-60.0, i) for i in nn])
 	rec = NeuronLayers([NeuronLayer(0.0, i) for i in nn])
@@ -100,7 +100,7 @@ function initialise_matrices(nn, weights::SynapseLayers)
 	ACh = NeuronLayers([NeuronLayer(0.0, i) for i in nn])
 	input = NeuronLayers([NeuronLayer(0.0, i) for i in nn])
 
-	synapses = clone_synapses(weights)
+	synapses = synapses#clone_synapses(weights)
 	γ = fill_synapses(SynapseLayers, nn, 0.0)
 
 	return activation, rec, spiked, spt, I, ACh, input, synapses, weights, γ
