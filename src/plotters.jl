@@ -2,13 +2,24 @@
 using Plots, Debugger, Images
 gr()
 
+struct GifPlot
+	anim::Animation
+	fname::String
+end
+GifPlot(fname::String) = GifPlot(Animation(), fname)
+
+"""
+initialises a plot
+"""
+function init_plot()
+	p = plot(framestyle=:none)
+end
 
 """
 Plots the neurons and their static connections
 """
-function networkplot(nn, connections::SynapseLayers)
+function networkplot(p, nn, connections::SynapseLayers)
 
-	p = plot()
 	ycoords, xcoords = neuronplot!(p, nn)
 	for i in 1:length(nn)-1
 		y = (ycoords[i], ycoords[i+1])
@@ -19,9 +30,7 @@ function networkplot(nn, connections::SynapseLayers)
 	return p
 end
 
-function networkplot(nn, connections::SynapseLayers, weights::SynapseLayers; maxneurons=20)
-
-	p = plot(framestyle=:none)
+function networkplot(p, nn, connections::SynapseLayers, weights::SynapseLayers; maxneurons=20)
 
 	nn = min.(maxneurons, nn)
 	ycoords, xcoords = neuronplot!(p, nn)
@@ -39,9 +48,7 @@ function networkplot(nn, connections::SynapseLayers, weights::SynapseLayers; max
 	return p	
 end
 
-function networkplot(nn, weights::SynapseLayers, spiked::NeuronLayers; maxneurons=20)
-
-	p = plot(framestyle=:none);
+function networkplot(p, nn, weights::SynapseLayers, spiked::NeuronLayers; maxneurons=20)
 
 	nn = min.(maxneurons, nn)
 	ycoords, xcoords = neuronplot!(p, nn)
@@ -62,12 +69,18 @@ end
 """
 checks the time and shows the plot if appropriate
 """
-function shownetwork(t, nn, m::MatrixTypes; framerate=1)
-
+function shownetwork(p,t, nn, m::MatrixTypes; framerate=1)
 	if t%framerate==0
-		display(networkplot(nn, m.weights, m.spiked))
+		display(networkplot(p, nn, m.weights, m.spiked))
 	end
 end
+
+function gifnetwork(gf::GifPlot, p, t, nn, m::MatrixTypes)
+	networkplot(p,nn,m.weights, m.spiked)
+	frame(gf.anim)
+	return gf
+end
+
 
 """
 This returns a plot of circles marking location of neurons.

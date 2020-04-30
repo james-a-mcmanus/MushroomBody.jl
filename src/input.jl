@@ -1,8 +1,80 @@
-struct RandInput
-	inarray::Array
-	inarrayseq::Array # basically for what portion of that input being shown should we actually release the dop
-	BAseq::Array
+using Random
+import Base.size
+
+abstract type StandardArray{T,N} <: AbstractArray{T,N} end
+Base.size(A::StandardArray) = size(A.data)
+Base.getindex(A::StandardArray, I::Int) = A.data[I]
+Base.getindex(A::StandardArray{T,N}, I::Vararg{Int,N}) where {T,N} = A.data[I...]
+Base.setindex(A::StandardArray, filler, I::Int) = A.data[I] = filler
+Base.setindex(A::StandardArray{T,N}, filler, I::Vararg{Int,N}) where {T,N} = A.data[I...] = filler
+
+abstract type AbstractInput{N} <: StandardArray{Float64,N} end
+struct RandInput{N} <: AbstractInput{N}
+
+	data::Array{<:Any,N}
 end
+struct SparseInput{N} <: AbstractInput{N}
+
+	data::Array{<:Any,N}
+end
+SparseInput(nn::Tuple) = SparseInput(nn, 0.1, 250)
+SparseInput(nn::Tuple, filler) = SparseInput(nn, 0.1, filler)
+function SparseInput(arraysize::Tuple, density, filler) # actual density is density^n. n=ndims
+
+	init = fill(0.0, arraysize)
+	fillsize = round.(Int, arraysize .* density)
+	init[map(x -> 1:x, fillsize)...] .= filler * ones(fillsize)
+	shuffle!(init)
+	return SparseInput(init)
+end
+
+abstract type AbstractSequence{T} <: StandardArray{T,1} end
+struct InputSequence{T} <: AbstractSequence{T}
+
+	data::Vector{T}
+end
+struct NTSequence{T} <: AbstractSequence{T} 
+
+	data::Vector{T}
+end
+function NTSequence(InSeq::InputSequence)
+end
+
+
+abstract type AbstractNeuroTransmitter <: AbstractFloat end
+struct Dopamine <: AbstractNeuroTransmitter
+	
+	data::Float64
+end
+struct AcetylCholine <: AbstractNeuroTransmitter
+
+	data::Float64
+end
+
+"""
+take the input object, the current time, and return the input array
+"""
+function get_input(t, in::AbstractInput) # fallback
+	in.data
+end
+
+function get_input(t, in::SparseInput)
+end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 function get_input(nn, rnge::Union{Array,UnitRange}; howmany=1)
 
@@ -29,7 +101,6 @@ function input_sequence(totalst, inst, on_off, rewtime; instart::Int=1, BAstart:
 	BAseq[BAstart:BAstart+BAt] .= 1
 
 	return(inputseq, BAseq)
-
 end
 
 function create_input(nn, rnge, nstp, instp, on_off, rewtime; BAstart=1)
