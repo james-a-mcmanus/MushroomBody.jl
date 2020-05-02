@@ -30,7 +30,13 @@ fillentries!,
 calc_input!,
 update_activation!, 
 update_γ!,
-SparseInput
+SparseInput,
+RestInput,
+constructinputsequence,
+Inputs,
+duration,
+get_input,
+durations
 
 
 using SparseArrays, Infiltrator
