@@ -1,5 +1,5 @@
 using Random, StaticArrays, Infiltrator
-import Base.size, Base.sum
+import Base.size, Base.sum, Base.show
 
 abstract type StandardArray{T,N} <: AbstractArray{T,N} end
 Base.size(A::StandardArray) = size(A.data)
@@ -8,13 +8,6 @@ Base.getindex(A::StandardArray{T,N}, I::Vararg{Int,N}) where {T,N} = A.data[I...
 Base.setindex(A::StandardArray, filler, I::Int) = A.data[I] = filler
 Base.setindex(A::StandardArray{T,N}, filler, I::Vararg{Int,N}) where {T,N} = A.data[I...] = filler
 
-struct DAInputTiming
-	before::Int
-	during::Int
-	after::Int
-end
-DAInputTiming(A::Array) = DAInputTiming(A[1],A[2],A[3])
-Base.sum(D::DAInputTiming) = D.before + D.during + D.after
 
 """
 Input Types, they are an array to be inputed, and hold info about how long to last etc.
@@ -22,18 +15,24 @@ Input Types, they are an array to be inputed, and hold info about how long to la
 abstract type AbstractInput{N} <: StandardArray{Float64,N} end
 struct RandInput{N} <: AbstractInput{N}
 	data::Array{<:Any,N}
-	displaytime::Int
-	datime::DAInputTiming
+	stages::Vector{Int}
+	input_bool::Vector{Bool}
+	da_bool::Vector{Bool}
+	cum_stages::Vector{Int}	
 end
 struct SparseInput{N} <: AbstractInput{N}
 	data::Array{<:Any,N}
-	displaytime::Int
-	datime::DAInputTiming
+	stages::Vector{Int}
+	input_bool::Vector{Bool}
+	da_bool::Vector{Bool}
+	cum_stages::Vector{Int}
 end
 struct RestInput{N} <: AbstractInput{N}
 	data::Array{<:Any,N}
-	displaytime::Number
-	datime::DAInputTiming
+	stages::Vector{Int}
+	input_bool::Vector{Bool}
+	da_bool::Vector{Bool}
+	cum_stages::Vector{Int}	
 end
 Inputs = Union{RandInput, SparseInput, RestInput}
 
@@ -42,26 +41,28 @@ Inputs = Union{RandInput, SparseInput, RestInput}
 Input type constructors
 """
 AbstractInput(construct::Type{T}, I::Vararg) where {T<:AbstractInput} = construct(I...)
-AbstractInput(construct::Type{T}, A::Array; it=1, dat=[0,1,0]) where {T<:AbstractInput} = construct(A, it=it, dat=dat)
-AbstractInput(construct::Type{T}, nn::Tuple; it=1, dat=[0,1,0]) where {T<:AbstractInput} = construct(nn, it=it, dat=dat)
+AbstractInput(construct::Type{T}, A::Array; stages=[0,1,0], input_bool=Bool[0,1,0], da_bool=Bool[0,1,0]) where {T<:AbstractInput} = construct(A, stages=stages, input_bool=input_bool, da_bool=da_bool)
+AbstractInput(construct::Type{T}, nn::Tuple; stages=[0,1,0], input_bool=Bool[0,1,0], da_bool=Bool[0,1,0]) where {T<:AbstractInput} = construct(nn, stages=stages, input_bool=input_bool, da_bool=da_bool)
 
-SparseInput(A::Array; it=1, dat=[0,1,0]) = SparseInput(A, it, DAInputTiming(dat))
-RestInput(A::Array; it=1, dat=[0,0,0]) = RestInput(A,it,DAInputTiming(dat))
-
-# nn constructors
-RestInput(nn::Tuple; it=1, dat=[0,0,0]) = RestInput(zeros(nn), it=it, dat=dat)
-function SparseInput(arraysize::Tuple; density=0.1, filler=250, it=1, dat=[0,1,0]) # actual density is density^n. n=ndims
+SparseInput(A::Array; stages=[0,1,0], input_bool=Bool[0,1,0], da_bool=Bool[0,1,0]) = SparseInput(A, stages, input_bool, da_bool)
+SparseInput(A::Array, stages::Vector{Int}, input_bool::Vector{Bool}, da_bool::Vector{Bool}) = SparseInput(A, stages, input_bool, da_bool, cumsum(stages))
+function SparseInput(arraysize::Tuple; density=0.5, filler=450, stages=[0,1,0], input_bool=Bool[0,1,0], da_bool=Bool[0,1,0]) # actual density is density^n. n=ndims
 
 	init = fill(0.0, arraysize)
 	fillsize = round.(Int, arraysize .* density)
 	init[map(x -> 1:x, fillsize)...] .= filler * ones(fillsize)
 	shuffle!(init)
-	return AbstractInput(SparseInput, init, it=it, dat=dat)
+	return AbstractInput(SparseInput, init, stages=stages, input_bool=input_bool, da_bool=da_bool)
 end
 
+RestInput(A::Array; stages=[0,1,0], input_bool=Bool[0,1,0], da_bool=Bool[0,1,0]) = RestInput(A, stages, input_bool, da_bool)
+RestInput(A::Array, stages::Vector{Int}, input_bool::Vector{Bool}, da_bool::Vector{Bool}) = RestInput(A, stages, input_bool, da_bool, cumsum(stages))
+RestInput(nn::Tuple; stages=[0,1,0], input_bool=Bool[0,1,0], da_bool=Bool[0,0,0]) = RestInput(zeros(nn), stages, input_bool, da_bool) #always no DA
 
 
-# Sequences
+"""
+Input Sequence
+"""
 abstract type AbstractSequence{T} <: StandardArray{T,1} end
 struct InputSequence <: AbstractSequence{Inputs} 
 	data::Vector{Inputs}
@@ -73,20 +74,19 @@ InputSequence(inputarray::Vector{Inputs}, default::RestInput) = InputSequence(in
 """
 functions for input types
 """
-duration(In::AbstractInput) = In.datime.before + In.displaytime + In.datime.after
-duration(Inseq::InputSequence) = sum([duration(it) for it in Inseq])
-inputdurations(Inseq::InputSequence) = [duration(it) for it in Inseq]
+duration(input::AbstractInput) = sum(input.stages)
+duration(inseq::InputSequence) = sum(inseq.inputdurations)
+inputdurations(inseq::InputSequence) = [duration(it) for it in inseq] #? does this need to be here??
 inputdurations(inseq::Vector{Inputs}) = [duration(it) for it in inseq]
-durations(input::AbstractInput) = [input.datime.before, input.displaytime, input.datime.after]
-durations(da::DAInputTiming) = [da.before, da.during, da.after]
+time_index(inseq::InputSequence, t) = findfirst(cumsum(inseq.inputdurations) .>= t)
 
-function constructinputsequence(nn, typelist; it=1, dat=[0,1,0])
+function constructinputsequence(nn, typelist; stages=[0,1,0],input_bool=Bool[0,1,0], da_bool=Bool[0,1,0])
 	
 	out = Vector{Inputs}(undef, length(typelist))
 	typlen = length(typelist)
 
 	for i in 1:typlen
-		out[i] = AbstractInput(typelist[i], nn, it=it, dat=dat)
+		out[i] = AbstractInput(typelist[i], nn, stages=stages, input_bool=input_bool, da_bool=da_bool)
 	end
 
 	default = RestInput(nn)
@@ -96,12 +96,9 @@ end
 emptyinputsequence() = InputSequence(Vector{Inputs}(undef,0))
 
 
-time_index(inseq::InputSequence, t) = findlast(cumsum(inseq.inputdurations) .<= t)
-time_index(input::AbstractInput, t) = findfirst(cumsum(durations(input)) .>= t)
-input_index(::AbstractInput, i) = i==2
-da_index(::DAInputTiming, i) = i==2
-time_index(da::DAInputTiming, t) = findfirst(cumsum(durations(da)) .>= t)
-
+"""
+returns the index (or stage) that the current time corresponds to
+"""
 function get_input(inseq::InputSequence, t) 
 
 	if t > duration(inseq) || t < 1
@@ -109,144 +106,35 @@ function get_input(inseq::InputSequence, t)
 	end
 
 	nowind = time_index(inseq, t)
-	tᵢ = 1 + t - cumsum(inseq.inputdurations)[nowind]
-	current_input = inseq[nowind]
-	
-	give_input, give_da = get_input(current_input, tᵢ)
+	tᵢ = nowind == 1 ? t : t - cumsum(inseq.inputdurations)[nowind-1]
 
-	input = give_input ? current_input.data : inseq.default.data
-
-	return (input, give_da)
+	#tᵢ = 1 + t - cumsum(inseq.inputdurations)[nowind]
+	stage = get_stage(inseq[nowind], tᵢ)
+	return nowind, inseq[nowind].input_bool[stage], inseq[nowind].da_bool[stage] # return 
 end
 
-function get_input(input::AbstractInput, t)
-
-	if t > duration(input) || t < 1
-		error("given t is not in input")
-	end
-
-	give_input = input_index(input, time_index(input,t))
-	give_da = da_index(input.datime, time_index(input.datime,t))
-
-	return give_input, give_da
-
-end
+get_stage(input::AbstractInput, t) = findfirst(input.cum_stages .>= t)
 
 
-
-
-# add a struct to the inputsequence that is basically the empty matrix that gets given when 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#=
-struct NTSequence{T} <: AbstractSequence{T} 
-
-	data::Vector{T}
-end
-function NTSequence(InSeq::InputSequence)
-end
-
-
-abstract type AbstractNeuroTransmitter <: AbstractFloat end
-struct Dopamine <: AbstractNeuroTransmitter
-	
-	data::Float64
-end
-struct AcetylCholine <: AbstractNeuroTransmitter
-
-	data::Float64
-end=#
 
 """
-take the input object, the current time, and return the input array
+wrapper for sensory and reward functions
 """
+function inputandreward!(t, input, sensory, τ; da=0)
 
+	input .= input.inarrayseq[t]==1 ? input.inarray[1] : input*1
+	BA = input.BAseq[t]
+	da = update_da(da, BA, τ)
 
-function get_input(t, in::SparseInput)
+	return(BA,da)	
 end
 
+function inputandreward!(t, input, sensory::InputSequence, τ, da_on; da=0)
 
+	i, give_input, give_da = get_input(sensory,t)
+	input .= give_input ? sensory[i].data : sensory.default.data
+	BA = give_da ? da_on : 0
+	da = update_da(da, BA, τ)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-function get_input(nn, rnge::Union{Array,UnitRange}; howmany=1)
-
-	rewinput = [rand(rnge, nn) for _ = 1:length(howmany)]
-
-	return rewinput
-end
-
-function input_timings(ns::Int, on_off, rewtime)
-
-	ontime = Int(round( ( on_off[1] / sum(on_off) ) * ns ))
-	BAtime =  Int(round( rewtime * ontime ))
-
-	return(BAtime, ontime)
-end
-
-function input_sequence(totalst, inst, on_off, rewtime; instart::Int=1, BAstart::Int=1)
-
-	(BAt, ot) = input_timings(inst, on_off, rewtime)
-
-	inputseq = zeros(totalst)
-	BAseq = zeros(totalst)
-	inputseq[instart:instart+ot] .= 1
-	BAseq[BAstart:BAstart+BAt] .= 1
-
-	return(inputseq, BAseq)
-end
-
-function create_input(nn, rnge, nstp, instp, on_off, rewtime; BAstart=1)
-
-	inarray = get_input(nn, rnge)
-	inseq, BAseq = input_sequence(nstp, instp, on_off, rewtime)
-	return(RandInput(inarray,inseq,BAseq))
+	return (BA, da)
 end
