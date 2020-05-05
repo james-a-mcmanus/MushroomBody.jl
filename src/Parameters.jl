@@ -1,3 +1,5 @@
+import Base: getproperty
+
 struct ParameterTypes{N}
 	nn::NTuple{N,Number}
 	c::NTuple{N,Number}
@@ -37,6 +39,8 @@ struct MatrixTypes
 	weights::SynapseLayers
 	γ::SynapseLayers
 end
+
+ContainerTypes = Union{ParameterTypes, MatrixTypes}
 
 struct NeuroTransmitter
 	da::Array
@@ -142,3 +146,5 @@ function get_matrices(f::typeof(calc_input!), m::MatrixTypes, l::Int=1)
 
 	return (m.input.layers[l+1], m.weights.layers[l], m.ACh.layers[l], m.activation.layers[l+1])
 end
+
+Base.getproperty(cont::ContainerTypes, str::String) = getfield(cont, Symbol(str)) # allows to get field of struct in MATLAB-like way

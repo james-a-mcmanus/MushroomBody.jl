@@ -146,24 +146,8 @@ function test_learning()
 	run_model(in1)
 end
 
+function response_before_after_learning()
 
-#=@userplot CirclePlot
-@recipe function f(cp::CirclePlot)
-    x, y, i = cp.args
-    n = length(x)
-    inds = circshift(1:n, 1 - i)
-    linewidth --> range(0, 10, length = n)
-    seriesalpha --> range(0, 1, length = n)
-    aspect_ratio --> 1
-    label --> false
-    x[inds], y[inds]
+	# train the model, and get the spike data, need to save it in some format...
+
 end
-
-n = 150
-t = range(0, 2π, length = n)
-x = sin.(t)
-y = cos.(t)
-
-for i ∈ 1:n
-    display(circleplot(x, y, i))
-end=#

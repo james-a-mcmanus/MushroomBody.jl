@@ -12,18 +12,19 @@ include("UpdateActivation.jl")
 include("initialisers.jl")
 include("Neurotransmitters.jl")
 include("helpers.jl")
-include("Tests.jl")
 include("input.jl")
 include("Parameters.jl")
 include("plotters.jl")
+include("Tests.jl")
+include("SaveData.jl")
 
 """
 run the model, i.e. put through a training phase and a test phase.
 """
 function run_model()
 
-	nn = [100, 1_000, 5]
-	sensory = constructinputsequence((100,), (SparseInput,RestInput,SparseInput,RestInput,SparseInput), stages=[10,100,1], input_bool=Bool[1,1,0], da_bool=Bool[0,1,1])
+	nn = [100, 1000, 5]
+	sensory = constructinputsequence((100,), (SparseInput,), stages=[10,100,1], input_bool=Bool[1,1,0], da_bool=Bool[0,1,1])
 	numsteps = duration(sensory)
 	println(numsteps)
 	weights, synapses = train_model(sensory,nn,numsteps, showplot=false)
@@ -52,7 +53,7 @@ end
 """
 train the model, returns weights and synapses
 """
-function train_model(sensory, nn, numsteps; showplot=false, gifplot=true)
+function train_model(sensory, nn, numsteps; showplot=false, gifplot=false, update=true, savevars="spiked")
 
 	m = MatrixTypes(initialise_matrices(nn)...)
 	p = get_parameters()
@@ -66,12 +67,11 @@ function train_model(sensory, nn, numsteps; showplot=false, gifplot=true)
 			if layer !== length(nn)
 				update_ACh!(t, layer, m, p, da)
 				calc_input!(layer, m, p)
-				if layer == 2
-					update_weights!(t, layer, m, p, da)
-				end
+				(layer == 2 && update) && update_weights!(t, layer, m, p, da)
 			end
 		end
 		showplot && shownetwork(init_plot(), t, nn, m)
+		!isnothing(savevars) && save_variables(m,savevars)
 	end
 
 	return (m.weights, m.synapses)
