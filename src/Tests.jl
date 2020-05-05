@@ -147,7 +147,11 @@ function test_learning()
 end
 
 function response_before_after_learning()
-
 	# train the model, and get the spike data, need to save it in some format...
-
+	nn = [100, 1000, 5]
+	sensory = constructinputsequence((100,), (SparseInput,), stages=[10,100,1], input_bool=Bool[1,1,0], da_bool=Bool[0,1,1])
+	numsteps = duration(sensory)
+	weights, synapses = train_model(sensory, nn, numsteps, showplot=false, savevars="spiked")
+	mv("C:\\Users\\James\\.julia\\dev\\MushroomBody\\src\\output\\Variables\\spiked.jld2", "C:\\Users\\James\\.julia\\dev\\MushroomBody\\src\\output\\Variables\\training.jld2")
+	test_model(sensory, nn, numsteps, weights, synapses, showplot=false, savevars="spiked")	
 end

@@ -29,7 +29,6 @@ function networkplot(p, nn, connections::SynapseLayers)
 
 	return p
 end
-
 function networkplot(p, nn, connections::SynapseLayers, weights::SynapseLayers; maxneurons=20)
 
 	nn = min.(maxneurons, nn)
@@ -47,7 +46,6 @@ function networkplot(p, nn, connections::SynapseLayers, weights::SynapseLayers; 
 
 	return p	
 end
-
 function networkplot(p, nn, weights::SynapseLayers, spiked::NeuronLayers; maxneurons=20)
 
 	nn = min.(maxneurons, nn)
@@ -74,7 +72,6 @@ function shownetwork(p,t, nn, m::MatrixTypes; framerate=1)
 		display(networkplot(p, nn, m.weights, m.spiked))
 	end
 end
-
 function gifnetwork(gf::GifPlot, p, t, nn, m::MatrixTypes)
 	networkplot(p,nn,m.weights, m.spiked)
 	frame(gf.anim)
@@ -110,7 +107,6 @@ end
 """
 Plot a line for each synapse, and flash if spiked
 """
-
 function plotconnections!(p, ycoords, xcoords, connections)
 
 	allconnections = vcat.(ycoords[1], ycoords[2]')
@@ -123,7 +119,6 @@ function plotconnections!(p, ycoords, xcoords, connections)
 		plot!(p,linexs[i],lineys[i],legend=false, linecolor=RGB(0.5,0.5,0.5), linealpha=0.9)
 	end
 end
-
 function plotconnections!(p, ycoords, xcoords, weights::BitArray{<:Any}, spikers::BitArray{<:Any})
 
 	allconnections = vcat.(ycoords[1], ycoords[2]')
@@ -143,9 +138,7 @@ function plotconnections!(p, ycoords, xcoords, weights::BitArray{<:Any}, spikers
 
 
 	plot!(p, spikexs, spikeys, legend=false, linecolor=RGB(0.9,0.1,0.1))
-
 end
-
 function plotconnections!(p, ycoords, xcoords, connections::BitArray{<:Any}, weights::BitArray{<:Any}, spikers::BitArray{<:Any})
 
 	
@@ -169,7 +162,6 @@ function plotconnections!(p, ycoords, xcoords, connections::BitArray{<:Any}, wei
 		plot!(p, spikexs[i], spikeys[i], legend=false, linecolor=RGB(0.9,0.1,0.1))
 	end
 end
-
 plotconnections!(p, ycoords, xcoords, connections::SynapseLayer, weights::SynapseLayer) = plotconnections!(p, ycoords, xcoords, connections.data .==1, weights.data)
 plotconnections!(p, ycoords, xcoords, weights::Array{<:Number,<:Any}, spikers::Array{<:Number,<:Any}) = plotconnections!(p, ycoords, xcoords, weights .> 0.0, spikers)
 plotconnections!(p, ycoords, xcoords, connections::Array{<:Number,<:Any}, weights::Array{<:Number,<:Any}, spiked::Array{<:Number, <:Any}) = plotconnections!(p, ycoords, xcoords, connections .==1, weights, spiked .== 1)

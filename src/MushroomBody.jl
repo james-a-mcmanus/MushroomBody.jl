@@ -2,7 +2,8 @@ module MushroomBody
 
 export 
 run_model, 
-gif_model
+gif_model,
+response_before_after_learning
 
 
 using SparseArrays, Infiltrator
@@ -22,7 +23,6 @@ include("SaveData.jl")
 run the model, i.e. put through a training phase and a test phase.
 """
 function run_model()
-
 	nn = [100, 1000, 5]
 	sensory = constructinputsequence((100,), (SparseInput,), stages=[10,100,1], input_bool=Bool[1,1,0], da_bool=Bool[0,1,1])
 	numsteps = duration(sensory)
@@ -53,7 +53,7 @@ end
 """
 train the model, returns weights and synapses
 """
-function train_model(sensory, nn, numsteps; showplot=false, gifplot=false, update=true, savevars="spiked")
+function train_model(sensory, nn, numsteps; showplot=false, gifplot=false, update=true, savevars=nothing)
 
 	m = MatrixTypes(initialise_matrices(nn)...)
 	p = get_parameters()
@@ -76,7 +76,6 @@ function train_model(sensory, nn, numsteps; showplot=false, gifplot=false, updat
 
 	return (m.weights, m.synapses)
 end
-
 function train_model(sensory, nn, numsteps, gf::GifPlot)
 
 	m = MatrixTypes(initialise_matrices(nn)...)
@@ -126,7 +125,7 @@ function test_model(sensory, nn, numsteps, weights, synapses, gf::GifPlot)
 
 	return gf
 end
-function test_model(sensory, nn, numsteps, weights, synapses; showplot=false)
+function test_model(sensory, nn, numsteps, weights, synapses; showplot=false, savevars=nothing)
 
 	m = MatrixTypes(initialise_matrices(nn, weights, synapses)...)
 	p = get_parameters()
@@ -142,9 +141,8 @@ function test_model(sensory, nn, numsteps, weights, synapses; showplot=false)
 				calc_input!(layer, m, p)
 			end
 		end
-		
 		showplot && shownetwork(init_plot(), t, nn, m)
-
+		!isnothing(savevars) && save_variables(m,savevars)
 	end
 end
 
