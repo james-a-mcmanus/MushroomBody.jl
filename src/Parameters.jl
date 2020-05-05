@@ -71,7 +71,7 @@ function get_parameters()
 	τ = (20, 20, 20)
 	miniw = (0.0, 0.0 ,0.0)
 	σ = (0.05, 0.05, 0.05)
-	da_on = .000005
+	da_on = .0007
 	δt = 1
 
 	parameters = ParameterTypes(nn,c,d,C,noisestd,vr,cap,a,b,k,vt,dvoltage,synt,quantile,t₋,A₋,tconst,rev,Φ,τ,miniw,σ,da_on,δt)

@@ -3,7 +3,10 @@ module MushroomBody
 export 
 run_model, 
 gif_model,
-response_before_after_learning
+response_before_after_learning,
+plotmeanlayer,
+meanlayer,
+plot_before_after
 
 
 using SparseArrays, Infiltrator
@@ -125,7 +128,7 @@ function test_model(sensory, nn, numsteps, weights, synapses, gf::GifPlot)
 
 	return gf
 end
-function test_model(sensory, nn, numsteps, weights, synapses; showplot=false, savevars=nothing)
+function test_model(sensory, nn, numsteps, weights, synapses; showplot=false, savevars=nothing, returnvar=nothing)
 
 	m = MatrixTypes(initialise_matrices(nn, weights, synapses)...)
 	p = get_parameters()
@@ -144,6 +147,7 @@ function test_model(sensory, nn, numsteps, weights, synapses; showplot=false, sa
 		showplot && shownetwork(init_plot(), t, nn, m)
 		!isnothing(savevars) && save_variables(m,savevars)
 	end
+	return (m.weights, m.synapses)
 end
 
 end

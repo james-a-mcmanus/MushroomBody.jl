@@ -1,5 +1,5 @@
 # plotting functions
-using Plots, Debugger, Images
+using Plots, Debugger, Images, Colors
 gr()
 
 struct GifPlot
@@ -171,3 +171,39 @@ plotconnections!(p, ycoords, xcoords, connections::SynapseLayer) = plotconnectio
 for axis with limits 1-n, what is the ideal marker size for n neurons to all show up
 """
 neuronmarkersize(numneurons) = 150 ./ (numneurons .+ 2)
+
+
+
+
+
+
+"""
+given a spikeplot, or some other neuronlayers object, plots a mean value of all neurons in each layer for each layer
+"""
+function plotmeanlayer(data::Array{<:BrainTypes,N}) where {N}
+	p = plot()
+	plotmeanlayer!(p,data)
+	return p
+end
+function plotmeanlayer!(p, data::Array{<:BrainTypes,N}) where {N}
+
+	numlayers = length(data[1].layers)
+	layercolors = range(HSL(0,0,0), HSL(1,1,1), length=numlayers)
+	means = meanlayer(data)
+	plot!(p,means)
+	return p
+end
+
+function meanlayer(data::Array{<:BrainTypes,N}) where {N}
+
+	numsteps = length(data)
+	numlayers = length(data[1].layers)
+	out = Array{Float64,2}(undef, numsteps,numlayers)
+	
+	for i = 1:numsteps
+		for l = 1:numlayers
+			out[i,l] = mean(data[i].layers[l])
+		end
+	end
+	return out
+end
