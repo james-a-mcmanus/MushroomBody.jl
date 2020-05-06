@@ -6,7 +6,8 @@ gif_model,
 response_before_after_learning,
 plotmeanlayer,
 meanlayer,
-plot_before_after
+plot_before_after,
+doboth
 
 
 using SparseArrays, Infiltrator
@@ -54,6 +55,37 @@ function gif_model()
 end
 
 """
+updater functions
+"""
+function run_all_steps(nn, numsteps, m, p, sensory, da; update=true, savevars=nothing, showplot=false)
+	for t = 1:numsteps
+		da = run_step(t, m, p, sensory, da, nn, update=update)
+		showplot && shownetwork(init_plot(), t, nn, m)
+		!isnothing(savevars) && save_variables(m,savevars)
+	end
+end
+function run_step(t, m, p, sensory, da, nn; update=true)
+	BA, da = inputandreward!(t, m.input.layers[1], sensory, p.τ[1], p.da_on, da=da)
+	for layer = 1:length(nn)
+		run_layer(t,layer,nn,m,p,da,update=update)
+	end	
+	return da
+end
+
+function run_layer(t, layer, nn, m, p, da; update=true)
+	update_activation!(t, layer, nn, m, p)
+	if layer !== length(nn)
+		update_pre_layers(t,layer,m,p,da, update=update)
+	end	
+end
+
+function update_pre_layers(t, layer, m, p, da; update=true)
+	update_ACh!(t, layer, m, p, da)
+	calc_input!(layer, m, p)
+	(layer == 2 && update) && update_weights!(t, layer, m, p, da)	
+end
+
+"""
 train the model, returns weights and synapses
 """
 function train_model(sensory, nn, numsteps; showplot=false, gifplot=false, update=true, savevars=nothing)
@@ -61,21 +93,25 @@ function train_model(sensory, nn, numsteps; showplot=false, gifplot=false, updat
 	m = MatrixTypes(initialise_matrices(nn)...)
 	p = get_parameters()
 	da = 0
+	run_all_steps(nn, numsteps, m, p, sensory, da, savevars=savevars, update=true)
 
-	for t = 1:numsteps
+#=	for t = 1:numsteps
+		da = run_step(t, m, p, sensory, da, nn, update=update)
 
 		BA, da = inputandreward!(t, m.input.layers[1], sensory, p.τ[1], p.da_on, da=da)
 		for layer = 1:length(nn)
+			run_layer(t,layer,nn,m,p,da,update=update)
 			update_activation!(t, layer, nn, m, p) #these haven't been defined: maybe have another get function for these?
 			if layer !== length(nn)
-				update_ACh!(t, layer, m, p, da)
+				update_pre_layers(t,layer,m,p,da, update=update)
+#=				update_ACh!(t, layer, m, p, da)
 				calc_input!(layer, m, p)
-				(layer == 2 && update) && update_weights!(t, layer, m, p, da)
+				(layer == 2 && update) && update_weights!(t, layer, m, p, da)=#
 			end
 		end
 		showplot && shownetwork(init_plot(), t, nn, m)
 		!isnothing(savevars) && save_variables(m,savevars)
-	end
+	end=#
 
 	return (m.weights, m.synapses)
 end

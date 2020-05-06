@@ -147,6 +147,10 @@ function test_learning()
 end
 
 function response_before_after_learning()
+	rm("C:\\Users\\James\\.julia\\dev\\MushroomBody\\src\\output\\Variables\\training.jld2")
+	rm("C:\\Users\\James\\.julia\\dev\\MushroomBody\\src\\output\\Variables\\seentest.jld2")
+	rm("C:\\Users\\James\\.julia\\dev\\MushroomBody\\src\\output\\Variables\\unseentest.jld2")
+
 	# train the model, and get the spike data, need to save it in some format...
 	nn = [100, 1000, 5]
 	sensory = constructinputsequence((100,), (SparseInput,), stages=[10,100,1], input_bool=Bool[1,1,0], da_bool=Bool[0,1,1])
@@ -163,9 +167,19 @@ end
 
 function plot_before_after()
 	outfolder = "C:\\Users\\James\\.julia\\dev\\MushroomBody\\src\\output\\Variables\\"
-	training = load(outfolder * "seentest.jld2","spiked")
-	testing = load(outfolder * "unseentest.jld2", "spiked")
-	train_plot = plotmeanlayer(training)
-	test_plot = plotmeanlayer(testing)
-	plot(train_plot,test_plot, layout=(1,2))
+	training = load(outfolder * "training.jld2","spiked")
+	seen = load(outfolder * "seentest.jld2","spiked")
+	unseen = load(outfolder * "unseentest.jld2", "spiked")
+	train_plot =plotmeanlayer(training) 
+	seen_plot = plotmeanlayer(seen)
+	unseen_plot = plotmeanlayer(unseen)
+	plot(train_plot,seen_plot, unseen_plot, layout=(1,3))
 end
+
+
+function doboth()
+	response_before_after_learning()
+	plot_before_after()
+end
+
+
