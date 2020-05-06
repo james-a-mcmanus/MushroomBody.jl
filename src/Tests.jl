@@ -147,22 +147,33 @@ function test_learning()
 end
 
 function response_before_after_learning()
-	rm("C:\\Users\\James\\.julia\\dev\\MushroomBody\\src\\output\\Variables\\training.jld2")
-	rm("C:\\Users\\James\\.julia\\dev\\MushroomBody\\src\\output\\Variables\\seentest.jld2")
-	rm("C:\\Users\\James\\.julia\\dev\\MushroomBody\\src\\output\\Variables\\unseentest.jld2")
+
+	remove_garbage()
 
 	# train the model, and get the spike data, need to save it in some format...
 	nn = [100, 1000, 5]
 	sensory = constructinputsequence((100,), (SparseInput,), stages=[10,100,1], input_bool=Bool[1,1,0], da_bool=Bool[0,1,1])
 	numsteps = duration(sensory)
-	weights, synapses = train_model(sensory, nn, numsteps, showplot=false, savevars="spiked")
+	weights, synapses, reporter = train_model(sensory, nn, numsteps, showplot=false, savevars="spiked")
 	mv("C:\\Users\\James\\.julia\\dev\\MushroomBody\\src\\output\\Variables\\spiked.jld2", "C:\\Users\\James\\.julia\\dev\\MushroomBody\\src\\output\\Variables\\training.jld2")
 	weights, synapses = test_model(sensory, nn, numsteps, weights, synapses, showplot=false, savevars="spiked")
 	mv("C:\\Users\\James\\.julia\\dev\\MushroomBody\\src\\output\\Variables\\spiked.jld2", "C:\\Users\\James\\.julia\\dev\\MushroomBody\\src\\output\\Variables\\seentest.jld2")
 	sensory = constructinputsequence((100,), (SparseInput,), stages=[10,100,1], input_bool=Bool[1,1,0], da_bool=Bool[0,1,1])
 	test_model(sensory, nn, numsteps, weights, synapses, showplot=false, savevars="spiked")
 	mv("C:\\Users\\James\\.julia\\dev\\MushroomBody\\src\\output\\Variables\\spiked.jld2", "C:\\Users\\James\\.julia\\dev\\MushroomBody\\src\\output\\Variables\\unseentest.jld2")
+	return reporter
+end
 
+function response_before_after_learning2()
+	nn = [100, 1000, 5]
+	sensory = constructinputsequence((100,), (SparseInput,), stages=[10,100,1], input_bool=Bool[1,1,0], da_bool=Bool[0,1,1])
+	numsteps = duration(sensory)
+	weights, synapses, trainspikes = train_model(sensory, nn, numsteps, reportvar="spiked")	
+#	weights, synapses, testspikes = test_model(sensory, nn, numsteps, weights, synapses, reportvar="spiked")
+	train_plot = plotmeanlayer(trainspikes)
+#	test_plot = plotmeanlayer(testspikes)
+#	plot(train_plot,test_plot, layout=(1,2))	
+	plot(train_plot)
 end
 
 function plot_before_after()
@@ -182,4 +193,8 @@ function doboth()
 	plot_before_after()
 end
 
-
+function remove_garbage()
+	rm("C:\\Users\\James\\.julia\\dev\\MushroomBody\\src\\output\\Variables\\training.jld2")
+	rm("C:\\Users\\James\\.julia\\dev\\MushroomBody\\src\\output\\Variables\\seentest.jld2")
+	rm("C:\\Users\\James\\.julia\\dev\\MushroomBody\\src\\output\\Variables\\unseentest.jld2")
+end
