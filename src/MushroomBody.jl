@@ -26,12 +26,12 @@ include("SaveData.jl")
 run the model, i.e. put through a training phase and a test phase.
 """
 function run_model()
-	nn = [1000, 10000, 1]
-	sensory = constructinputsequence((1000,), (SparseInput,), stages=[10,100,1], input_bool=Bool[1,1,0], da_bool=Bool[0,1,1])
+	nn = [100, 1000, 5]
+	sensory = constructinputsequence((100,), (SparseInput,), stages=[10,100,1], input_bool=Bool[1,1,0], da_bool=Bool[0,1,1])
 	numsteps = duration(sensory)
-	println("Number of Steps: $numsteps")
+	println(numsteps)
 	weights, synapses = train_model(sensory,nn,numsteps, showplot=false)
-	test_model(sensory,nn,numsteps,weights, synapses)
+	test_model(sensory,nn,numsteps,weights, synapses)# calcs an sensory and then calls run_model(::Randsensory).
 end
 function run_model(gf::GifPlot)
 
@@ -56,41 +56,26 @@ end
 """
 train the model, returns weights and synapses
 """
-
-function run_all_steps(nn, numsteps, m, p, sensory, da; update=true, savevars=nothing, reportvar=nothing, showplot=false)
-	for t = 1:numsteps
-		da = run_step(t, m, p, sensory, da, nn, update=update)
-		showplot && shownetwork(init_plot(), t, nn, m)
-		!isnothing(savevars) && save_variables(m,savevars)
-		!isnothing(reportvar) && returnvar(m,reportvar)
-	end
-end
-function run_step(t, m, p, sensory, da, nn; update=true)
-	BA, da = inputandreward!(t, m.input.layers[1], sensory, p.τ[1], p.da_on, da=da)
-	for layer = 1:length(nn)
-		run_layer(t,layer,nn,m,p,da,update=true)
-	end	
-	return da
-end
-function run_layer(t, layer, nn, m, p, da; update=true)
-	update_activation!(t, layer, nn, m, p)
-	if layer !== length(nn)
-		update_pre_layers(t,layer,m,p,da, update=true)
-	end	
-end
-function update_pre_layers(t, layer, m, p, da; update=true)
-	update_ACh!(t, layer, m, p, da)
-	calc_input!(layer, m, p)
-	(layer == 2 && update) && update_weights!(t, layer, m, p, da)	
-end
-
-function train_model(sensory, nn, numsteps; showplot=true, gifplot=false, update=true, savevars=nothing, reportvar=nothing)
+function train_model(sensory, nn, numsteps; showplot=false, gifplot=false, update=true, savevars=nothing)
 
 	m = MatrixTypes(initialise_matrices(nn)...)
 	p = get_parameters()
 	da = 0
 
-	run_all_steps(nn, numsteps, m, p, sensory, da, savevars=savevars, reportvar=reportvar, update=true)
+	for t = 1:numsteps
+
+		BA, da = inputandreward!(t, m.input.layers[1], sensory, p.τ[1], p.da_on, da=da)
+		for layer = 1:length(nn)
+			update_activation!(t, layer, nn, m, p) #these haven't been defined: maybe have another get function for these?
+			if layer !== length(nn)
+				update_ACh!(t, layer, m, p, da)
+				calc_input!(layer, m, p)
+				(layer == 2 && update) && update_weights!(t, layer, m, p, da)
+			end
+		end
+		showplot && shownetwork(init_plot(), t, nn, m)
+		!isnothing(savevars) && save_variables(m,savevars)
+	end
 
 	return (m.weights, m.synapses)
 end
@@ -143,13 +128,25 @@ function test_model(sensory, nn, numsteps, weights, synapses, gf::GifPlot)
 
 	return gf
 end
-function test_model(sensory, nn, numsteps, weights, synapses; showplot=false, savevars=nothing, reportvar=nothing)
+function test_model(sensory, nn, numsteps, weights, synapses; showplot=false, savevars=nothing, returnvar=nothing)
 
 	m = MatrixTypes(initialise_matrices(nn, weights, synapses)...)
 	p = get_parameters()
 	da = 0
 
-	run_all_steps(nn, numsteps, m, p, sensory, da, savevars=savevars, reportvar=reportvar, update=false)
+	for t = 1:numsteps
+	
+		BA, da = inputandreward!(t, m.input.layers[1], sensory, p.τ[1], p.da_on, da=da)
+		for layer = 1:length(nn)
+			update_activation!(t, layer, nn, m, p) #these haven't been defined: maybe have another get function for these?
+			if layer !== length(nn)
+				update_ACh!(t, layer, m, p, da)
+				calc_input!(layer, m, p)
+			end
+		end
+		showplot && shownetwork(init_plot(), t, nn, m)
+		!isnothing(savevars) && save_variables(m,savevars)
+	end
 	return (m.weights, m.synapses)
 end
 
