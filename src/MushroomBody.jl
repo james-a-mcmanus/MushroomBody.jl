@@ -56,7 +56,7 @@ function gif_model()
 end
 
 """
-updater functions
+Within-Network Functions
 """
 function run_all_steps(nn, numsteps, m, p, sensory, da; update=true, savevars=nothing, showplot=false, reportvar=nothing)
 	returnvariable = !isnothing(reportvar) && initialise_return_variable(numsteps,m,reportvar)	
@@ -65,10 +65,10 @@ function run_all_steps(nn, numsteps, m, p, sensory, da; update=true, savevars=no
 		showplot && shownetwork(init_plot(), t, nn, m)
 		!isnothing(savevars) && save_variables(m,savevars)
 		if !isnothing(reportvar)
+
 			returnvariable[t] = return_variable(m, reportvar)
 		end
-#=		returnvariable[t] = !isnothing(reportvar) ? return_variable(m, reportvar) #returnvariable[t] = !isnothing(reportvar) && return_variable(m,reportvar)
-=#	end
+	end
 	return returnvariable
 end
 function run_step(t, m, p, sensory, da, nn; update=true)
@@ -78,14 +78,12 @@ function run_step(t, m, p, sensory, da, nn; update=true)
 	end	
 	return da
 end
-
 function run_layer(t, layer, nn, m, p, da; update=true)
 	update_activation!(t, layer, nn, m, p)
 	if layer !== length(nn)
 		update_pre_layers(t,layer,m,p,da, update=update)
 	end	
 end
-
 function update_pre_layers(t, layer, m, p, da; update=true)
 	update_ACh!(t, layer, m, p, da)
 	calc_input!(layer, m, p)
@@ -132,6 +130,15 @@ end
 """
 Test the model, takes weights
 """
+function test_model(sensory, nn, numsteps, weights, synapses; showplot=false, gifplot=false, update=false, savevars=nothing, reportvar=nothing)
+
+	m = MatrixTypes(initialise_matrices(nn, weights, synapses)...)
+	p = get_parameters()
+	da = 0
+	reporter = run_all_steps(nn, numsteps, m, p, sensory, da, savevars=savevars, update=false, reportvar=reportvar)
+	return (m.weights, m.synapses, reporter)
+end
+
 function test_model(sensory, nn, numsteps, weights, synapses, gf::GifPlot)
 
 	m = MatrixTypes(initialise_matrices(nn, weights, synapses)...)
@@ -153,7 +160,16 @@ function test_model(sensory, nn, numsteps, weights, synapses, gf::GifPlot)
 
 	return gf
 end
-function test_model(sensory, nn, numsteps, weights, synapses; showplot=false, savevars=nothing, returnvar=nothing)
+
+
+
+
+
+
+
+
+
+#=function test_model(sensory, nn, numsteps, weights, synapses; showplot=false, savevars=nothing, returnvar=nothing)
 
 	m = MatrixTypes(initialise_matrices(nn, weights, synapses)...)
 	p = get_parameters()
@@ -173,6 +189,6 @@ function test_model(sensory, nn, numsteps, weights, synapses; showplot=false, sa
 		!isnothing(savevars) && save_variables(m,savevars)
 	end
 	return (m.weights, m.synapses)
-end
+end=#
 
 end
