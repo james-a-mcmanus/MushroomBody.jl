@@ -159,3 +159,31 @@ function response_before_after_learning2()
 
 end
 
+function many_stimuli()
+
+	nn = [100, 1000, 5]
+	numtrain = 2
+	numtest = 2
+	sstages = [10, 100 , 10]
+	input = Bool[1,1,0]
+	da = Bool[0,1,0]
+	reportvar = "spiked"
+
+	m = MatrixTypes(initialise_matrices(nn)...)
+	p = get_parameters()
+	da = 0	
+
+	trainsensory = [constructinputsequence(sstages, input, da) for tr in 1:numtrain]
+	testsensory = [constructinputsequence(sstages, input, da) for te in 1:numtest]
+	
+	for tr in 1:numtrain
+		reporter = run_all_steps(nn, numsteps, m, p, trainsensory[tr], da, savevars=savevars, update=true, reportvar=reportvar)
+		mean(reporter)
+	end
+
+	for te in 1:numtests
+		reporter = run_all_steps(nn, numsteps, m, p, trainsensory[tr], da, savevars=nothing, update=false, reportvar=reportvar)
+		mean(reporter)
+	end
+
+end
