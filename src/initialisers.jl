@@ -90,14 +90,9 @@ Base.zero(::Type{NeuronLayer{T,N}}) where {T<:Number,N} = NeuronLayer{T,N}([zero
 NeuronLayer(filler::T, len::Integer) where T = NeuronLayer{T,1}(fill(filler,len), (len,))
 Base.copy(A::ConnectionLayer) = typeof(A)(copy(A.data),A.dims)
 Base.copy(A::BrainTypes) = typeof(A)([copy(l) for l in A.layers])
-average(A::ConnectionLayer) = [average(lay) for lay in A.layers]
-
-@inline function average(A::ConnectionLayer)
-
-	sum(A.data) == 0 ? 0 : sum(A.data)/length(A.data)
-
-end
-
+average(A::BrainTypes) = mean([average(lay) for lay in A.layers])
+average(A::ConnectionLayer) = sum(A.data) == 0 ? 0 : sum(A.data)/length(A.data)
+average(A::Array{<:BrainTypes,1}) = mean([average(elem) for elem in A])
 
 Base.zero(::Type{SynapseLayer{T,N}}) where {T<:Number, N} = SynapseLayer{T,N}(zeros(Int,ntuple(x->1,N)),ntuple(x->1,N))
 Base.getindex(A::SynapseLayer{T,N}, I::Vararg{Int,N}) where {T,N} = A.data[I...]
