@@ -146,26 +146,44 @@ function test_learning()
 	run_model(in1)
 end
 
-function response_before_after_learning()
-	# train the model, and get the spike data, need to save it in some format...
+function response_before_after_learning2()
+
 	nn = [100, 1000, 5]
 	sensory = constructinputsequence((100,), (SparseInput,), stages=[10,100,1], input_bool=Bool[1,1,0], da_bool=Bool[0,1,1])
 	numsteps = duration(sensory)
-	weights, synapses = train_model(sensory, nn, numsteps, showplot=false, savevars="spiked")
-	mv("C:\\Users\\James\\.julia\\dev\\MushroomBody\\src\\output\\Variables\\spiked.jld2", "C:\\Users\\James\\.julia\\dev\\MushroomBody\\src\\output\\Variables\\training.jld2")
-	weights, synapses = test_model(sensory, nn, numsteps, weights, synapses, showplot=false, savevars="spiked")
-	mv("C:\\Users\\James\\.julia\\dev\\MushroomBody\\src\\output\\Variables\\spiked.jld2", "C:\\Users\\James\\.julia\\dev\\MushroomBody\\src\\output\\Variables\\seentest.jld2")
-	sensory = constructinputsequence((100,), (SparseInput,), stages=[10,100,1], input_bool=Bool[1,1,0], da_bool=Bool[0,1,1])
-	test_model(sensory, nn, numsteps, weights, synapses, showplot=false, savevars="spiked")
-	mv("C:\\Users\\James\\.julia\\dev\\MushroomBody\\src\\output\\Variables\\spiked.jld2", "C:\\Users\\James\\.julia\\dev\\MushroomBody\\src\\output\\Variables\\unseentest.jld2")
+	weights, synapses, trainspikes = train_model(sensory, nn, numsteps, reportvar="spiked")	
+	_, _, testspikes = test_model(sensory, nn, numsteps, weights, synapses, reportvar="spiked")
+	train_plot = plotmeanlayer(trainspikes)
+	test_plot = plotmeanlayer(testspikes)
+	plot(train_plot,test_plot, layout=(1,2))
 
 end
 
-function plot_before_after()
-	outfolder = "C:\\Users\\James\\.julia\\dev\\MushroomBody\\src\\output\\Variables\\"
-	training = load(outfolder * "seentest.jld2","spiked")
-	testing = load(outfolder * "unseentest.jld2", "spiked")
-	train_plot = plotmeanlayer(training)
-	test_plot = plotmeanlayer(testing)
-	plot(train_plot,test_plot, layout=(1,2))
+function many_stimuli()
+
+	nn = [100, 1000, 5]
+	numtrain = 2
+	numtest = 2
+	sstages = [10, 100 , 10]
+	input = Bool[1,1,0]
+	da = Bool[0,1,0]
+	reportvar = "spiked"
+
+	m = MatrixTypes(initialise_matrices(nn)...)
+	p = get_parameters()
+	da = 0	
+
+	trainsensory = [constructinputsequence(sstages, input, da) for tr in 1:numtrain]
+	testsensory = [constructinputsequence(sstages, input, da) for te in 1:numtest]
+	
+	for tr in 1:numtrain
+		reporter = run_all_steps(nn, numsteps, m, p, trainsensory[tr], da, savevars=savevars, update=true, reportvar=reportvar)
+		mean(reporter)
+	end
+
+	for te in 1:numtests
+		reporter = run_all_steps(nn, numsteps, m, p, trainsensory[tr], da, savevars=nothing, update=false, reportvar=reportvar)
+		mean(reporter)
+	end
+
 end

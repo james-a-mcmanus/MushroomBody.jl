@@ -33,3 +33,13 @@ get_variable(m::ContainerTypes, var::String) = getproperty(m,var)
 
 #=Base.push!(layers::Union{NeuronLayers,SynapseLayers},newvar) = layers=[layers]; push!([layers],newvar)
 =#
+
+@inline function return_variable(m::ContainerTypes, varname::String)
+	copy(get_variable(m,varname))
+end
+
+@inline function initialise_return_variable(numsteps, m::ContainerTypes, varname::String)
+
+	Array{typeof(get_variable(m,varname)),1}(undef,numsteps)
+
+end

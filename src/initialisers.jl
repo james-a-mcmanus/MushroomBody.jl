@@ -88,6 +88,16 @@ Base.setindex!(A::NeuronLayer, filler, Ind::Int) where {T,N} = (A.data[Ind] = fi
 Base.zero(::Type{NeuronLayer{T,N}}) where {T<:Number,N} = NeuronLayer{T,N}([zero(T)],(1,))
  NeuronLayer(::Type{T}, len::Integer) where {T} = NeuronLayer{T,1}(Array{T,1}(undef, len), (len,))
 NeuronLayer(filler::T, len::Integer) where T = NeuronLayer{T,1}(fill(filler,len), (len,))
+Base.copy(A::ConnectionLayer) = typeof(A)(copy(A.data),A.dims)
+Base.copy(A::BrainTypes) = typeof(A)([copy(l) for l in A.layers])
+average(A::ConnectionLayer) = [average(lay) for lay in A.layers]
+
+@inline function average(A::ConnectionLayer)
+
+	sum(A.data) == 0 ? 0 : sum(A.data)/length(A.data)
+
+end
+
 
 Base.zero(::Type{SynapseLayer{T,N}}) where {T<:Number, N} = SynapseLayer{T,N}(zeros(Int,ntuple(x->1,N)),ntuple(x->1,N))
 Base.getindex(A::SynapseLayer{T,N}, I::Vararg{Int,N}) where {T,N} = A.data[I...]
