@@ -33,7 +33,7 @@ function run_model()
 	sensory = constructinputsequence((100,), (SparseInput,), stages=[10,100,1], input_bool=Bool[1,1,0], da_bool=Bool[0,1,1])
 	numsteps = duration(sensory)
 	println(numsteps)
-	weights, synapses = train_model(sensory,nn,numsteps, showplot=false)
+	weights, synapses = train_model(sensory,nn,numsteps, showplot=true)
 	test_model(sensory,nn,numsteps,weights, synapses)# calcs an sensory and then calls run_model(::Randsensory).
 end
 function run_model(gf::GifPlot)
@@ -66,7 +66,6 @@ function run_all_steps(nn, numsteps, m, p, sensory, da; update=true, savevars=no
 		showplot && shownetwork(init_plot(), t, nn, m)
 		!isnothing(savevars) && save_variables(m,savevars)
 		if !isnothing(reportvar)
-
 			returnvariable[t] = return_variable(m, reportvar)
 		end
 	end
@@ -99,7 +98,7 @@ function train_model(sensory, nn, numsteps; showplot=false, gifplot=false, updat
 	m = MatrixTypes(initialise_matrices(nn)...)
 	p = get_parameters()
 	da = 0
-	reporter = run_all_steps(nn, numsteps, m, p, sensory, da, savevars=savevars, update=true, reportvar=reportvar)
+	reporter = run_all_steps(nn, numsteps, m, p, sensory, da, savevars=savevars, update=true, reportvar=reportvar, showplot=showplot)
 	return (m.weights, m.synapses, reporter)
 end
 

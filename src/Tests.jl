@@ -162,8 +162,8 @@ end
 function many_stimuli()
 
 	nn = [100, 1000, 5]
-	numtrain = 2
-	numtest = 2
+	numtrain = 4
+	numtest = 4
 
 	facenum = tuple(nn[1])
 	stimtype = (SparseInput,)
@@ -176,21 +176,47 @@ function many_stimuli()
 	p = get_parameters()
 	da = 0	
 
-	trainsensory = [constructinputsequence(facenum, stimtype, stages=sstages, input_bool=input, da_bool=dastages) for tr in 1:numtrain]
-	testsensory = [constructinputsequence(facenum, stimtype, stages=sstages, input_bool=input, da_bool=dastages) for te in 1:numtest]
-	
+	sensory = [constructinputsequence(facenum, stimtype, stages=sstages, input_bool=input, da_bool=dastages) for te in 1:(numtrain + numtest)]
+
+	# Training Period	
 	for tr in 1:numtrain
-		numsteps = duration(trainsensory[tr])
-		reporter = run_all_steps(nn, numsteps, m, p, trainsensory[tr], da, savevars=nothing, update=true, reportvar=reportvar)
-		println(average_layers(reporter,3)) # wait we only want the 3rd layer...
+		numsteps = duration(sensory[tr])
+		reporter = run_all_steps(nn, numsteps, m, p, sensory[tr], da, savevars=nothing, update=true, reportvar=reportvar)
+		m = m = reset(nn, m.weights, m.synapses)
 	end
 
-	for te in 1:numtest
-		numsteps = duration(testsensory[te])
-		reporter = run_all_steps(nn, numsteps, m, p, testsensory[te], da, savevars=nothing, update=false, reportvar=reportvar)
+	# 
+	for te in 1:(numtrain + numtest)
+		numsteps = duration(sensory[te])
+		m = reset(nn, m.weights, m.synapses)
+		reporter = run_all_steps(nn, numsteps, m, p, sensory[te], da, savevars=nothing, update=false, reportvar=reportvar)
 		println(average_layers(reporter,3))
 	end
+end
 
+function observe_variable(reportvar::String)
+
+	nn = [100, 1000, 5]
+	numstim = 1
+
+	facenum = tuple(nn[1])
+	stimtype = (SparseInput,)
+	sstages = [10, 1000 , 10]
+	input = Bool[1,1,0]
+	dastages = Bool[0,1,0]
+
+	m = MatrixTypes(initialise_matrices(nn)...)
+	p = get_parameters()
+	da = 0	
+
+	sensory = [constructinputsequence(facenum, stimtype, stages=sstages, input_bool=input, da_bool=dastages) for te in 1:numstim]
+
+	for i in 1:numstim
+		numsteps = duration(sensory[i])
+		reporter = run_all_steps(nn, numsteps, m, p, sensory[i], da, savevars=nothing, update=false, reportvar=reportvar)
+		p = plot(average_timestep(reporter))
+	end
+	return p
 end
 
 function average_layers(A::Array{<:BrainTypes,1},l)
@@ -199,4 +225,20 @@ function average_layers(A::Array{<:BrainTypes,1},l)
 		holder[t] = mean(A[t].layers[l])
 	end
 	return mean(holder)
+end
+
+function average_timestep(A::Array{<:BrainTypes,1})
+	numsteps = length(A)
+	numlayers = length(A[1].layers)
+	out = zeros(numsteps, numlayers)
+	for s = 1:numsteps
+		for l = 1:numlayers
+			out[s,l] = mean(A[s].layers[l])
+		end
+	end
+	return out
+end
+
+function reset(nn, weights, synapses)
+	return MatrixTypes(initialise_matrices(nn, weights, synapses)...) 
 end

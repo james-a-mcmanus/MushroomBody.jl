@@ -46,7 +46,7 @@ AbstractInput(construct::Type{T}, nn::Tuple; stages=[0,1,0], input_bool=Bool[0,1
 
 SparseInput(A::Array; stages=[0,1,0], input_bool=Bool[0,1,0], da_bool=Bool[0,1,0]) = SparseInput(A, stages, input_bool, da_bool)
 SparseInput(A::Array, stages::Vector{Int}, input_bool::Vector{Bool}, da_bool::Vector{Bool}) = SparseInput(A, stages, input_bool, da_bool, cumsum(stages))
-function SparseInput(arraysize::Tuple; density=0.5, filler=450, stages=[0,1,0], input_bool=Bool[0,1,0], da_bool=Bool[0,1,0]) # actual density is density^n. n=ndims
+function SparseInput(arraysize::Tuple; density=0.1, filler=450, stages=[0,1,0], input_bool=Bool[0,1,0], da_bool=Bool[0,1,0]) # actual density is density^n. n=ndims
 
 	init = fill(0.0, arraysize)
 	fillsize = round.(Int, arraysize .* density)
