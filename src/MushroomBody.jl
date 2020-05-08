@@ -59,10 +59,10 @@ end
 """
 Within-Network Functions
 """
-function run_all_steps(nn, numsteps, m, p, sensory, da; update=true, savevars=nothing, showplot=false, reportvar=nothing)
+function run_all_steps(nn, numsteps, m, p, sensory, da; update=true, savevars=nothing, showplot=false, reportvar=nothing, normweights=false)
 	returnvariable = !isnothing(reportvar) && initialise_return_variable(numsteps,m,reportvar)	
 	for t = 1:numsteps
-		da = run_step(t, m, p, sensory, da, nn, update=update)
+		da = run_step(t, m, p, sensory, da, nn, update=update, normweights=normweights)
 		showplot && shownetwork(init_plot(), t, nn, m)
 		!isnothing(savevars) && save_variables(m,savevars)
 		if !isnothing(reportvar)
@@ -71,11 +71,12 @@ function run_all_steps(nn, numsteps, m, p, sensory, da; update=true, savevars=no
 	end
 	return returnvariable
 end
-function run_step(t, m, p, sensory, da, nn; update=true)
+function run_step(t, m, p, sensory, da, nn; update=true, normweights=false)
 	BA, da = inputandreward!(t, m.input.layers[1], sensory, p.τ[1], p.da_on, da=da)
 	for layer = 1:length(nn)
 		run_layer(t,layer,nn,m,p,da,update=update)
-	end	
+	end 
+	normweights && normalise_layer!(m, p, l=(length(nn)-1)) # normalise the last layer.	
 	return da
 end
 function run_layer(t, layer, nn, m, p, da; update=true)

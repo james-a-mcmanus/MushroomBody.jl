@@ -74,8 +74,8 @@ function get_parameters()
 	τ = (20, 20, 20)
 	miniw = (0.0, 0.0, 0.0)
 	σ = (0.05, 0.05, 0.05)
-	init_weight = (20, 20, undef)
-	syn_density = (0.1, 1, undef)
+	init_weight = (20, 20, 20)
+	syn_density = (0.02, 1, 0.1)
 	weight_target = (200, 200, 200)
 	da_on = .0009
 	δt = 1

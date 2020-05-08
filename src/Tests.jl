@@ -237,11 +237,11 @@ end
 
 function test_many_kenyon_weights()
 
-	totalweights = range(10,500,length=10)
+	totalweights = range(300,500,length=3)
 	p = get_parameters()
 	
-	numtest=16
-	numtrain=16
+	numtest=128
+	numtrain=30
 
 	for kw in totalweights
 
@@ -272,9 +272,9 @@ function test_total_kenyon_weight(p; numtrain=4, numtest=4)
 	# Training Period	
 	for tr in 1:numtrain
 		numsteps = duration(sensory[tr])
-		reporter = run_all_steps(nn, numsteps, m, p, sensory[tr], da, savevars=nothing, update=true, reportvar=reportvar)
+		reporter = run_all_steps(nn, numsteps, m, p, sensory[tr], da, savevars=nothing, update=true, normweights=false, reportvar=reportvar)
+		normalise_layer!(m, p, l=2)
 		m = reset(nn, p, m.weights, m.synapses)
-		normalise_layer!(m, p; l=3) # this should go within the function to be run every time it runs no?
 	end
 
 	avactivation = zeros(numtrain+numtest)
@@ -287,5 +287,4 @@ function test_total_kenyon_weight(p; numtrain=4, numtest=4)
 	end
 
 	return avactivation
-
 end
