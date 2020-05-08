@@ -94,18 +94,19 @@ end
 train the model, returns weights and synapses
 """
 function train_model(sensory, nn, numsteps; showplot=false, gifplot=false, update=true, savevars=nothing, reportvar=nothing)
-
-	m = MatrixTypes(initialise_matrices(nn)...)
+	
 	p = get_parameters()
+	m = MatrixTypes(initialise_matrices(nn, p)...)
+	
 	da = 0
 	reporter = run_all_steps(nn, numsteps, m, p, sensory, da, savevars=savevars, update=true, reportvar=reportvar, showplot=showplot)
 	return (m.weights, m.synapses, reporter)
 end
-
 function train_model(sensory, nn, numsteps, gf::GifPlot)
-
-	m = MatrixTypes(initialise_matrices(nn)...)
+	
 	p = get_parameters()
+	m = MatrixTypes(initialise_matrices(nn, p)...)
+	
 	da = 0
 
 	for t = 1:numsteps
@@ -131,25 +132,26 @@ end
 Test the model, takes weights
 """
 function test_model(sensory, nn, numsteps, weights, synapses; showplot=false, gifplot=false, update=false, savevars=nothing, reportvar=nothing)
-
-	m = MatrixTypes(initialise_matrices(nn, weights, synapses)...)
+	
 	p = get_parameters()
+	m = MatrixTypes(initialise_matrices(nn, p, weights, synapses)...)
+	
 	da = 0
 	reporter = run_all_steps(nn, numsteps, m, p, sensory, da, savevars=savevars, update=false, reportvar=reportvar)
 	return (m.weights, m.synapses, reporter)
 end
-
 function test_model(sensory, nn, numsteps, weights, synapses, gf::GifPlot)
-
-	m = MatrixTypes(initialise_matrices(nn, weights, synapses)...)
+	
 	p = get_parameters()
+	m = MatrixTypes(initialise_matrices(nn, p, weights, synapses)...)
+	
 	da = 0
 
 	for t = 1:numsteps
 	
 		BA, da = inputandreward!(t, m.input.layers[1], sensory, p.τ[1], da=da)
 		for layer = 1:length(nn)
-			update_activation!(t, layer, nn, m, p) #these haven't been defined: maybe have another get function for these?
+			update_activation!(t, layer, nn, m, p)
 			if layer !== length(nn)
 				update_ACh!(t, layer, m, p, da)
 				calc_input!(layer, m, p)
@@ -160,35 +162,5 @@ function test_model(sensory, nn, numsteps, weights, synapses, gf::GifPlot)
 
 	return gf
 end
-
-
-
-
-
-
-
-
-
-#=function test_model(sensory, nn, numsteps, weights, synapses; showplot=false, savevars=nothing, returnvar=nothing)
-
-	m = MatrixTypes(initialise_matrices(nn, weights, synapses)...)
-	p = get_parameters()
-	da = 0
-
-	for t = 1:numsteps
-	
-		BA, da = inputandreward!(t, m.input.layers[1], sensory, p.τ[1], p.da_on, da=da)
-		for layer = 1:length(nn)
-			update_activation!(t, layer, nn, m, p) #these haven't been defined: maybe have another get function for these?
-			if layer !== length(nn)
-				update_ACh!(t, layer, m, p, da)
-				calc_input!(layer, m, p)
-			end
-		end
-		showplot && shownetwork(init_plot(), t, nn, m)
-		!isnothing(savevars) && save_variables(m,savevars)
-	end
-	return (m.weights, m.synapses)
-end=#
 
 end

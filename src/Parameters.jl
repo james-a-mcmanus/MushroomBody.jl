@@ -1,6 +1,6 @@
 import Base: getproperty
 
-struct ParameterTypes{N}
+mutable struct ParameterTypes{N}
 	nn::NTuple{N,Number}
 	c::NTuple{N,Number}
 	d::NTuple{N,Number}
@@ -23,6 +23,9 @@ struct ParameterTypes{N}
 	τ::NTuple{N,Number}
 	miniw::NTuple{N,Number}
 	σ::NTuple{N,Number}
+	init_weight::NTuple{N,Number}
+	syn_density::NTuple{N,Number}
+	weight_target::NTuple{N,Number}	
 	da_on::Number
 	δt::Number
 end
@@ -58,7 +61,7 @@ function get_parameters()
 	cap = (100, 4, 100)
 	a = (0.3, 0.01, 0.3)#(0.3, 0.01, 0.3)
 	b = (-0.2, -0.3, -0.2)
-	k = (2, 0.015, 2)#=k = (2, 0.015, 2)=#
+	k = (2, 0.035, 2)#=k = (2, 0.015, 2)=#
 	vt = (-40, -25, -40)
 	dvoltage = (-60, -85, -60)
 	synt = (3, 8, 8)
@@ -69,17 +72,48 @@ function get_parameters()
 	rev = (0, 0, 0)
 	Φ = (0.5, 0.5, 0.5)
 	τ = (20, 20, 20)
-	miniw = (0.0, 0.0 ,0.0)
+	miniw = (0.0, 0.0, 0.0)
 	σ = (0.05, 0.05, 0.05)
+	init_weight = (20, 20, undef)
+	syn_density = (0.1, 1, undef)
+	weight_target = (200, 200, 200)
 	da_on = .0009
 	δt = 1
 
-	parameters = ParameterTypes(nn,c,d,C,noisestd,vr,cap,a,b,k,vt,dvoltage,synt,quantile,t₋,A₋,tconst,rev,Φ,τ,miniw,σ,da_on,δt)
+	parameters = ParameterTypes(
+		nn,
+		c,
+		d,
+		C,
+		noisestd,
+		vr,
+		cap,
+		a,
+		b,
+		k,
+		vt,
+		dvoltage,
+		synt,
+		quantile,
+		t₋,
+		A₋,
+		tconst,
+		rev,
+		Φ,
+		τ,
+		miniw,
+		σ,
+		init_weight,
+		syn_density,
+		weight_target,
+		da_on,
+		δt
+		)
 	
 	return parameters
 end
 
-function initialise_matrices(nn)
+function initialise_matrices(nn, p)
 
 	activation = NeuronLayers([NeuronLayer(-60.0, i) for i in nn])
 	rec = NeuronLayers([NeuronLayer(0.0, i) for i in nn])
@@ -89,14 +123,14 @@ function initialise_matrices(nn)
 	ACh = NeuronLayers([NeuronLayer(0.0, i) for i in nn])
 	input = NeuronLayers([NeuronLayer(0.0, i) for i in nn])
 
-	weights = create_synapses(SynapseLayers,nn)
+	weights = create_synapses(SynapseLayers,nn, p.syn_density, p.init_weight)
 	synapses = clone_synapses(weights)
 	γ = fill_synapses(SynapseLayers, nn, 0.0)
 
 	return activation, rec, spiked, spt, I, ACh, input, synapses, weights, γ
 end
 
-function initialise_matrices(nn, weights::SynapseLayers, synapses::SynapseLayers)
+function initialise_matrices(nn, p, weights::SynapseLayers, synapses::SynapseLayers)
 
 	activation = NeuronLayers([NeuronLayer(-60.0, i) for i in nn])
 	rec = NeuronLayers([NeuronLayer(0.0, i) for i in nn])
@@ -106,7 +140,7 @@ function initialise_matrices(nn, weights::SynapseLayers, synapses::SynapseLayers
 	ACh = NeuronLayers([NeuronLayer(0.0, i) for i in nn])
 	input = NeuronLayers([NeuronLayer(0.0, i) for i in nn])
 
-	synapses = synapses#clone_synapses(weights)
+	#synapses = synapses#clone_synapses(weights)
 	γ = fill_synapses(SynapseLayers, nn, 0.0)
 
 	return activation, rec, spiked, spt, I, ACh, input, synapses, weights, γ

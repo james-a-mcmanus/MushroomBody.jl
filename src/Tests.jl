@@ -138,14 +138,6 @@ function test_weight()
 	display(p)
 end
 
-function test_learning()
-
-	nn = SA[10, 100, 1]
-	numsteps  = 10
-	in1 = create_input(nn[1], 180:220, numsteps, numsteps, [50,50], 0.8, BAstart=10)
-	run_model(in1)
-end
-
 function response_before_after_learning2()
 
 	nn = [100, 1000, 5]
@@ -156,7 +148,6 @@ function response_before_after_learning2()
 	train_plot = plotmeanlayer(trainspikes)
 	test_plot = plotmeanlayer(testspikes)
 	plot(train_plot,test_plot, layout=(1,2))
-
 end
 
 function many_stimuli()
@@ -172,8 +163,8 @@ function many_stimuli()
 	dastages = Bool[0,1,0]
 	reportvar = "spiked"
 
-	m = MatrixTypes(initialise_matrices(nn)...)
 	p = get_parameters()
+	m = MatrixTypes(initialise_matrices(nn, p)...)
 	da = 0	
 
 	sensory = [constructinputsequence(facenum, stimtype, stages=sstages, input_bool=input, da_bool=dastages) for te in 1:(numtrain + numtest)]
@@ -182,13 +173,13 @@ function many_stimuli()
 	for tr in 1:numtrain
 		numsteps = duration(sensory[tr])
 		reporter = run_all_steps(nn, numsteps, m, p, sensory[tr], da, savevars=nothing, update=true, reportvar=reportvar)
-		m = m = reset(nn, m.weights, m.synapses)
+		m = m = reset(nn, p, m.weights, m.synapses)
 	end
 
 	# 
 	for te in 1:(numtrain + numtest)
 		numsteps = duration(sensory[te])
-		m = reset(nn, m.weights, m.synapses)
+		m = reset(nn, p, m.weights, m.synapses)
 		reporter = run_all_steps(nn, numsteps, m, p, sensory[te], da, savevars=nothing, update=false, reportvar=reportvar)
 		println(average_layers(reporter,3))
 	end
@@ -204,9 +195,9 @@ function observe_variable(reportvar::String)
 	sstages = [10, 1000 , 10]
 	input = Bool[1,1,0]
 	dastages = Bool[0,1,0]
-
-	m = MatrixTypes(initialise_matrices(nn)...)
+	
 	p = get_parameters()
+	m = MatrixTypes(initialise_matrices(nn,p)...)
 	da = 0	
 
 	sensory = [constructinputsequence(facenum, stimtype, stages=sstages, input_bool=input, da_bool=dastages) for te in 1:numstim]
@@ -239,6 +230,62 @@ function average_timestep(A::Array{<:BrainTypes,1})
 	return out
 end
 
-function reset(nn, weights, synapses)
-	return MatrixTypes(initialise_matrices(nn, weights, synapses)...) 
+# this is actually just a less efficient version of initialise_matrices(_,_,weights,synapses)
+function reset(nn, p, weights, synapses)
+	return MatrixTypes(initialise_matrices(nn, p, weights, synapses)...) 
+end
+
+function test_many_kenyon_weights()
+
+	totalweights = range(10,500,length=10)
+	p = get_parameters()
+	
+	numtest=16
+	numtrain=16
+
+	for kw in totalweights
+
+		p.weight_target = (kw, kw, kw)
+		MBON = test_total_kenyon_weight(p, numtest=numtest, numtrain=numtrain)
+		print("\nTrain Average: $(mean(MBON[1:numtest])), Test Average: $(mean(MBON[numtest+1:end]))")
+		#print("\ntotal weight: $(kw)")
+		#print(" learning index: $(test_total_kenyon_weight(p))")
+	end
+end
+
+function test_total_kenyon_weight(p; numtrain=4, numtest=4)
+
+	nn = [100, 1000, 1]
+
+	facenum = tuple(nn[1])
+	stimtype = (SparseInput,)
+	sstages = [10, 100 , 10]
+	input = Bool[1,1,0]
+	dastages = Bool[0,1,0]
+	reportvar = "spiked"
+	da=0
+
+	m = MatrixTypes(initialise_matrices(nn, p)...)
+	
+	sensory = [constructinputsequence(facenum, stimtype, stages=sstages, input_bool=input, da_bool=dastages) for te in 1:(numtrain + numtest)]
+
+	# Training Period	
+	for tr in 1:numtrain
+		numsteps = duration(sensory[tr])
+		reporter = run_all_steps(nn, numsteps, m, p, sensory[tr], da, savevars=nothing, update=true, reportvar=reportvar)
+		m = reset(nn, p, m.weights, m.synapses)
+		normalise_layer!(m, p; l=3) # this should go within the function to be run every time it runs no?
+	end
+
+	avactivation = zeros(numtrain+numtest)
+	
+	for te in 1:(numtrain + numtest)
+		numsteps = duration(sensory[te])
+		m = reset(nn, p, m.weights, m.synapses)
+		reporter = run_all_steps(nn, numsteps, m, p, sensory[te], da, savevars=nothing, update=false, reportvar=reportvar)
+		avactivation[te] = average_layers(reporter,3)
+	end
+
+	return avactivation
+
 end

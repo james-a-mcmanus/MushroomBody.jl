@@ -27,3 +27,8 @@ function stdp(latency, A₋, t₋)
 
 	(latency .!= 0) .* A₋ .* exp.(latency ./ t₋) # punishes neurnos where pre fired after post
 end
+
+function normalise_layer!(m, p; l=3)
+
+	m.weights.layers[l-1] .= m.weights.layers[l-1] .* (p.weight_target[l] ./ sum(m.weights.layers[l-1]))
+end

@@ -98,16 +98,10 @@ Base.zero(::Type{SynapseLayer{T,N}}) where {T<:Number, N} = SynapseLayer{T,N}(ze
 Base.getindex(A::SynapseLayer{T,N}, I::Vararg{Int,N}) where {T,N} = A.data[I...]
 Base.setindex!(A::SynapseLayer{T,N}, filler, I::Vararg{Int,N}) where {T,N} = A.data[I...] = filler
 Base.length(bt::BrainTypes) = length(bt.layers)
-#Base.show(io::IO, cn::ConnectionLayer) = print(cn.data)
-#=Base.getindex(A::ConnectionLayer{T,N,S}, I::Vararg{Int,N}) where {T,N,S<:AbstractSparseArray{T,Int,N}} = getindex(A.data, I)#A.data[I...]
-Base.getindex(A::ConnectionLayer, I::Any) = getindex(A,I)
-=#
+
 SynapseLayer{T,N}(A::Array{T,N}) where {T,N} = SynapseLayer{T,N}(A,size(A))
 SynapseLayer(A::Array{T,N}) where {T,N} = SynapseLayer{T,N}(A)
 SynapseLayer(filler::T, dims::NTuple{N,Int}) where {T,N} = SynapseLayer{T,N}(fill(filler, dims))
-
-#=ConnectionLayer(A::AbstractArray{T,N}) where {T,N} = ConnectionLayer(A,size(A))
-=#
 
 #-------------------------------------------------------------------------------------------------------#
 #										Initialising Functions
@@ -115,9 +109,9 @@ SynapseLayer(filler::T, dims::NTuple{N,Int}) where {T,N} = SynapseLayer{T,N}(fil
 function create_synapses(::Type{SynapseLayer}, lyrsize::NTuple{2,Int}; syndens=0.1, weight=20.0)
 
 	syns = SynapseLayer(zeros(lyrsize...))
+	syndens==1 && return SynapseLayer(ones(lyrsize...))
 	ns = Int(round(syndens*lyrsize[1]))
 	cons = Array{Int,2}(undef,ns,lyrsize[2])
-
 	for i = 1:lyrsize[2]
 		cons[:,i] .= shuffle(1:lyrsize[1])[1:ns]
 	end
@@ -125,14 +119,24 @@ function create_synapses(::Type{SynapseLayer}, lyrsize::NTuple{2,Int}; syndens=0
 	for postlyr = 1:lyrsize[2]
 		syns[cons[:,postlyr],postlyr] .= weight
 	end
-
 	return syns
 end
+
+Iterable = Union{Array, Tuple}
 
 function create_synapses(::Type{SynapseLayers}, nn::Array; syndens=0.1, weight=2)
 
 	lyrsizes = [(nn[i],nn[i+1]) for i = 1:length(nn)-1]
 	SynapseLayers([create_synapses(SynapseLayer, lrs) for lrs in lyrsizes])
+end
+
+function create_synapses(::Type{SynapseLayers}, nn::Iterable, syndens::Iterable, weight::Iterable)
+	lyrsizes = [(nn[i],nn[i+1]) for i = 1:length(nn)-1]
+	out = Array{SynapseLayer,1}(undef,length(nn)-1)
+	for (i, ls) in enumerate(lyrsizes)
+		out[i] = create_synapses(SynapseLayer, ls, syndens=syndens[i], weight=weight[i])
+	end
+	return SynapseLayers{Float64,2}(out)
 end
 
 function clone_synapses(SLS::SynapseLayers; filler=1)
