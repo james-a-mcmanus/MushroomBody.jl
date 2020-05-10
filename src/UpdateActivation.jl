@@ -4,10 +4,11 @@ function update_activation!(t, layer, nn, matrices, parameters)
 	vt, vr, C, a, b, c, d, k, σ, δt = get_parameters(update_activation!,parameters,layer)
 	v, sp, spt, rec, I = get_matrices(update_activation!, matrices, layer)
 
-	ξ = generate_noise(σ,nn)
+	ξ = generate_noise(σ,nn[layer])
 	update_voltage!(v, vr, vt, rec, I, ξ, C, k, δt)
 	update_recovery!(v, vr, rec, a, b, δt)
 	update_spikes!(v, sp, spt, t, vt, rec, c, d)
+
 end
 
 function generate_noise(σ,nn)
