@@ -295,15 +295,14 @@ function test_parameter(p, nn; numtrain=4, numtest=4, layer_view=3)
 
 	facenum = tuple(nn[1])
 	stimtype = (SparseInput,)
-	sstages = [10, 100 , 10]
-	input = Bool[1,1,0]
-	dastages = Bool[0,1,0]
+	sstages = [3, 50, 20]
+	input = Bool[1,1, 0]
+	dastages = Bool[0,1, 0]
 	reportvar = "spiked"
 	da=0
 
 	m = MatrixTypes(initialise_matrices(nn, p)...)
 	sensory = [constructinputsequence(facenum, stimtype, stages=sstages, input_bool=input, da_bool=dastages) for te in 1:(numtrain + numtest)]
-
 	# Training Period	
 	for tr in 1:numtrain		
 
@@ -319,6 +318,7 @@ function test_parameter(p, nn; numtrain=4, numtest=4, layer_view=3)
 		numsteps = duration(sensory[te])
 		m = reset(nn, p, m.weights, m.synapses)
 		reporter = run_all_steps(nn, numsteps, m, p, sensory[te], da, savevars=nothing, update=false, reportvar=reportvar)
+		@infiltrate
 		avactivation[te] = average_layers(reporter,layer_view)
 	end
 	return avactivation
