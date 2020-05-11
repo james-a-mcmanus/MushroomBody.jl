@@ -1,4 +1,4 @@
-using Statistics
+using Statistics, Dates
 
 function test_ach()
 
@@ -222,7 +222,7 @@ function observe_variable(reportvar::String; nn=[100,1000,1])
 	return p
 end
 
-function observe_variable(reportvar::String; nn=[100,1000,1], layer=1)
+function observe_variable_in_layer(reportvar::String; nn=[100,1000,1], layer=1)
 
 	numstim = 1
 
@@ -324,29 +324,43 @@ function test_parameter(p, nn; numtrain=4, numtest=4, layer_view=3)
 	return avactivation
 end
 
-function test_learning()
+function test_learning(p, nn; numtest=16, numtrain=16, numreps=10, progress=false)
 
-	p = get_parameters()
-	
-	numtest=16
-	numtrain=16
-	nn = [100, 10000, 1]
-	numreps = 2
-	train_mean = zeros(numreps)
-	test_mean = zeros(numreps)
-	train_std = zeros(numreps)
-	test_std = zeros(numreps)
+	learn_measure = zeros(numreps)
 
 	for i in 1:numreps
-		println(i)
 		MBON = test_parameter(p, nn, numtest=numtest, numtrain=numtrain, layer_view=3)
-		train_mean[i] = mean(MBON[1:numtrain])
-		test_mean[i] = mean(MBON[numtrain+1:end])
-		train_std[i] = std(MBON[1:numtrain])
-		test_std[i]	= std(MBON[numtrain+1:end])
+		learn_measure[i] = mean(MBON[numtrain+1:end]) - mean(MBON[1:numtrain])
+		progress && print("\nRepetition: $i")
 	end
+	return learn_measure
+end
 
-	bar([1,2], [mean(train_mean), mean(test_mean)], grid=false, yerror=[mean(train_std), mean(test_std)], ylim=[0,1], marker = stroke(2, RGB(0.8,0.1,0.1)))
+function test_many_parameters(parameter_name::String, parameter_values::Array)
+
+	p = get_parameters()
+	fname = "C:\\Users\\MIKKO\\.julia\\dev\\MushroomBody\\src\\output\\Parameter Search\\" * parameter_name * Dates.format(now(), "ddmm_HHMM") * ".txt"
+
+	open(fname, "w") do io
+
+		for (i, parameter) in enumerate(parameter_values)
+			setproperty!(p, parameter_name, parameter)
+
+			start = Dates.Time(Dates.now())
+			
+			learning_measures = test_learning(p, p.nn)
+			
+			finish = Dates.Time(Dates.now())
+			
+			print("\nEstimated Time to Completion: $(round((finish-start)*(length(parameter_values)-i),Dates.Second))\n")
+			println(io, "$(parameter_name): $(parameter)  Mean Learning: $(mean(learning_measures))  Standard Deviation: $(std(learning_measures))")
+		end
+		println(io, "\nParameters\n")
+		for param in string(p)
+			println(io, param)
+		end
+
+	end
 end
 
 function kcactivation()
@@ -361,14 +375,4 @@ function kcactivation()
 		kc_activation[i] = mean(test_parameter(p, nn, numtest=numtest, numtrain=0, layer_view=2))
 	end
 	plot(kcnum, kc_activation)
-end
-
-function compare(m1::MatrixTypes, m2::MatrixTypes, nn)
-	numlayers = length(m1.spiked.layers)
-	for fnm in fieldnames(MatrixTypes)
-		println(String(fnm))
-		for l = 1:numlayers
-			println(all(getfield(m1.layers[l], fnm) .== getfield(m2.layers[l], fnm))) # won't work for 2d.
-		end
-	end
 end

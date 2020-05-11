@@ -1,7 +1,7 @@
-import Base: getproperty
+import Base: getproperty, setproperty!
 
 mutable struct ParameterTypes{N}
-	nn::NTuple{N,Number}
+	nn::Array{Int,1}
 	c::NTuple{N,Number}
 	d::NTuple{N,Number}
 	C::NTuple{N,Number}
@@ -52,7 +52,7 @@ end
 
 function get_parameters()
 
-	nn = (20, 100, 1)
+	nn = [100, 1000, 1]
 	c = (-65, -65, -65)
 	d = (8, 8, 8)
 	C = (100, 4, 100)
@@ -75,7 +75,7 @@ function get_parameters()
 	miniw = (0.0, 0.0, 0.0)
 	σ = (0.05, 0.05, 0.05)
 	init_weight = (20, 20, 20)
-	syn_density = (0.01, 1, 0.1)
+	syn_density = (0.05, 1, 0.1)
 	weight_target = (200, 500, 200)
 	da_on = .0009
 	δt = 1
@@ -182,3 +182,18 @@ function get_matrices(f::typeof(calc_input!), m::MatrixTypes, l::Int=1)
 end
 
 Base.getproperty(cont::ContainerTypes, str::String) = getfield(cont, Symbol(str)) # allows to get field of struct in MATLAB-like way
+
+Base.setproperty!(cont::ContainerTypes, str::String, new_value) = setfield!(cont, Symbol(str), new_value)
+
+function string(p::ParameterTypes) # not so great b/c it returns an array not a string...
+
+	fields = fieldnames(ParameterTypes)
+	out = Array{String,1}(undef,(length(fields)))
+
+	for (i, field) in enumerate(fields)
+
+		out[i] = string(field) * ": " * string(getfield(p, field))
+
+	end
+	return out
+end
