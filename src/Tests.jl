@@ -295,7 +295,7 @@ function test_parameter(p, nn; numtrain=4, numtest=4, layer_view=3)
 
 	facenum = tuple(nn[1])
 	stimtype = (SparseInput,)
-	sstages = [3, 50, 20]
+	sstages = [20, 50, 0]
 	input = Bool[1,1, 0]
 	dastages = Bool[0,1, 0]
 	reportvar = "spiked"
@@ -307,10 +307,11 @@ function test_parameter(p, nn; numtrain=4, numtest=4, layer_view=3)
 	for tr in 1:numtrain		
 
 		m = reset(nn, p, m.weights, m.synapses)
-		normalise_layer!(m, p, l=2)
+		#normalise_layer!(m, p, l=2)
 		numsteps = duration(sensory[tr])
-		reporter = run_all_steps(nn, numsteps, m, p, sensory[tr], da, savevars=nothing, update=true, normweights=false, reportvar=reportvar)
+		reporter = run_all_steps(nn, numsteps, m, p, sensory[tr], da, savevars=nothing, update=true, normweights=true, reportvar=reportvar)
 	end
+	#normalise_layer!(m, p, l=2)
 
 	avactivation = zeros(numtrain+numtest)
 	

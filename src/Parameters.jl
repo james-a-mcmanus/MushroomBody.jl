@@ -77,7 +77,7 @@ function get_parameters()
 	init_weight = (20, 20, 20)
 	syn_density = (0.05, 1, 0.1)
 	weight_target = (200, 500, 200)
-	da_on = .0009
+	da_on = 0.01#.0009
 	δt = 1
 
 	parameters = ParameterTypes(

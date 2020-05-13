@@ -52,6 +52,6 @@ function calc_apl_inhibition(m, p)
 # could base it off some chlorine current (i think it's GABA?)
 # could just subtract it from the input for next timestep
 
-	sum(m.ACh.layers)
-
+	m.input.layers[2] .=- sum(m.ACh[2].layers)
+	
 end
