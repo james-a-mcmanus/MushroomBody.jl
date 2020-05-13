@@ -29,7 +29,7 @@ include("SaveData.jl")
 run the model, i.e. put through a training phase and a test phase.
 """
 function run_model()
-	nn = [100, 1000, 5]
+	nn = [100, 1000, 1]
 	sensory = constructinputsequence((100,), (SparseInput,), stages=[10,100,1], input_bool=Bool[1,1,0], da_bool=Bool[0,1,1])
 	numsteps = duration(sensory)
 	println(numsteps)

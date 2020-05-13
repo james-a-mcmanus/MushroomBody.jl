@@ -29,7 +29,7 @@ function networkplot(p, nn, connections::SynapseLayers)
 
 	return p
 end
-function networkplot(p, nn, connections::SynapseLayers, weights::SynapseLayers; maxneurons=40)
+function networkplot(p, nn, connections::SynapseLayers, weights::SynapseLayers; maxneurons=50)
 
 	nn = min.(maxneurons, nn)
 	ycoords, xcoords = neuronplot!(p, nn)
@@ -46,17 +46,16 @@ function networkplot(p, nn, connections::SynapseLayers, weights::SynapseLayers; 
 
 	return p	
 end
-function networkplot(p, nn, weights::SynapseLayers, spiked::NeuronLayers; maxneurons=40)
+function networkplot(p, nn, m::MatrixTypes; maxneurons=50)
 
 	nn = min.(maxneurons, nn)
-	ycoords, xcoords = neuronplot!(p, nn)
-
+	ycoords, xcoords = neuronplot!(p, nn, m, maxneurons)
 	for i in 1:length(nn)-1
 		y = (ycoords[i], ycoords[i+1])
 		x = (xcoords[i], xcoords[i+1])
 
-		viewweights = weights.layers[i].data[1:nn[i],1:nn[i+1]] .> 0
-		viewspiked = spiked.layers[i].data[1:nn[i]] .* viewweights
+		viewweights = m.weights.layers[i].data[1:nn[i],1:nn[i+1]] .> 0
+		viewspiked = m.spiked.layers[i].data[1:nn[i]] .* viewweights
 		plotconnections!(p, y, x, viewweights, viewspiked)
 	end
 
@@ -69,7 +68,7 @@ checks the time and shows the plot if appropriate
 """
 function shownetwork(p,t, nn, m::MatrixTypes; framerate=1)
 	if t%framerate==0
-		display(networkplot(p, nn, m.weights, m.spiked))
+		display(networkplot(p, nn, m))
 	end
 end
 function gifnetwork(gf::GifPlot, p, t, nn, m::MatrixTypes)
@@ -100,9 +99,35 @@ function neuronplot!(p, nn)
 	maxmkr = maximum(markersizes)
 	maxy = [-maxmkr/5, maxn + maxmkr/5]
 	maxx = [1-maxmkr/50, numlayers + maxmkr/50]
-
-	scatter!(p, xcoords, ycoords, markersize=markersizes, legend=false, ylims=maxy, xlims=maxx)
+	scatter!(p, xcoords, ycoords, markercolor=:white, markersize=markersizes, legend=false, ylims=maxy, xlims=maxx)
 	return (ys, xs)
+end
+
+function neuronplot!(p, nn, m::MatrixTypes, maxneurons)
+
+	
+	
+	numlayers = length(nn)
+	maxn = maximum(nn)
+
+	xs = fill.([1:numlayers;], nn)
+	xcoords = reduce(vcat, xs)
+	
+	mcolours = RGB.(vcat(m.input.layers[1][1:maxneurons] .> 0, falses(length(xs[2])), m.spiked.layers[3][1:min(length(m.spiked.layers[3]),maxneurons)]))
+	
+	f(x) = x==1 ? [round(maxn/2)] : [range(1,stop=maxn, length=x);]
+
+	ys = map(x -> f(x),nn)
+	ycoords = reduce(vcat, map(x -> f(x),nn))
+	markersizes = reduce(vcat, fill.(neuronmarkersize(nn), nn))
+	
+	maxmkr = maximum(markersizes)
+	maxy = [-maxmkr/5, maxn + maxmkr/5]
+	maxx = [1-maxmkr/50, numlayers + maxmkr/50]	
+
+	scatter!(p, xcoords, ycoords, markercolor=mcolours, markersize=markersizes, legend=false, ylims=maxy, xlims=maxx)
+	return(ys, xs)
+	# now we need to get just the inputted ones and colour them in white.
 end
 
 
