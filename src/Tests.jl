@@ -318,7 +318,6 @@ function test_parameter(p, nn; numtrain=4, numtest=4, layer_view=3)
 		numsteps = duration(sensory[te])
 		m = reset(nn, p, m.weights, m.synapses)
 		reporter = run_all_steps(nn, numsteps, m, p, sensory[te], da, savevars=nothing, update=false, reportvar=reportvar)
-		@infiltrate
 		avactivation[te] = average_layers(reporter,layer_view)
 	end
 	return avactivation

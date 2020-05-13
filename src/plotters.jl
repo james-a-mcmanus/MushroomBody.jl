@@ -91,8 +91,10 @@ function neuronplot!(p, nn)
 	xs = fill.([1:numlayers;], nn)
 	xcoords = reduce(vcat, xs)
 
-	ys = map(x -> [range(1,stop=maxn,length=x);],nn)
-	ycoords = reduce(vcat, map(x -> [range(1,stop=maxn,length=x);],nn))
+	f(x) = x==1 ? [round(maxn/2)] : [range(1,stop=maxn, length=x);]
+
+	ys = map(x -> f(x),nn)
+	ycoords = reduce(vcat, map(x -> f(x),nn))
 	markersizes = reduce(vcat, fill.(neuronmarkersize(nn), nn))
 	
 	maxmkr = maximum(markersizes)
@@ -171,10 +173,6 @@ plotconnections!(p, ycoords, xcoords, connections::SynapseLayer) = plotconnectio
 for axis with limits 1-n, what is the ideal marker size for n neurons to all show up
 """
 neuronmarkersize(numneurons) = 150 ./ (numneurons .+ 2)
-
-
-
-
 
 
 """
