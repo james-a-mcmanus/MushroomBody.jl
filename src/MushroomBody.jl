@@ -56,21 +56,40 @@ function gif_model()
 	run_model(gf)
 end
 
+
+
 """
-Within-Network Functions
+Run All the Steps
 """
 function run_all_steps(nn, numsteps, m, p, sensory, da; update=true, savevars=nothing, showplot=false, reportvar=nothing, normweights=false)
-	returnvariable = !isnothing(reportvar) && initialise_return_variable(numsteps,m,reportvar)	
+
+	returnvariable = !isnothing(reportvar) && initialise_return_variable(numsteps,m,reportvar)
+
 	for t = 1:numsteps
+		
 		da = run_step(t, m, p, sensory, da, nn, update=update, normweights=normweights)
+		
 		showplot && shownetwork(init_plot(), t, nn, m)
+		
 		!isnothing(savevars) && save_variables(m,savevars)
+		
 		if !isnothing(reportvar)
 			returnvariable[t] = return_variable(m, reportvar)
-		end
+		end	
 	end
 	return returnvariable
 end
+function run_all_steps(nn, numsteps, m, p, sensory, da, gf::GifPlot; update=true, normweights=false)
+	for t = 1:numsteps
+		da = run_step(t, m, p, sensory, da, nn, update=update, normweights=normweights)
+		gf = gifnetwork(gf, init_plot(), t, nn, m)
+	end
+	return gf
+end
+
+"""
+run single step
+"""
 function run_step(t, m, p, sensory, da, nn; update=true, normweights=false)
 	BA, da = inputandreward!(t, m.input.layers[1], sensory, p.τ[1], p.da_on, da=da)
 	for layer = 1:length(nn)
@@ -79,17 +98,27 @@ function run_step(t, m, p, sensory, da, nn; update=true, normweights=false)
 	normweights && normalise_layer!(m, p, l=(length(nn)-1)) # normalise the last layer.	
 	return da
 end
+"""
+run Single layer
+"""
 function run_layer(t, layer, nn, m, p, da; update=true)
 	update_activation!(t, layer, nn, m, p)
 	if layer !== length(nn)
 		update_pre_layers(t,layer,m,p,da, update=update)
 	end	
 end
+"""
+weight-changing and output functions for all but last layers.
+"""
 function update_pre_layers(t, layer, m, p, da; update=true)
 	update_ACh!(t, layer, m, p, da)
 	calc_input!(layer, m, p)
 	(layer == 2 && update) && update_weights!(t, layer, m, p, da)	
 end
+
+
+
+
 
 """
 train the model, returns weights and synapses
@@ -103,29 +132,13 @@ function train_model(sensory, nn, numsteps; showplot=false, gifplot=false, updat
 	reporter = run_all_steps(nn, numsteps, m, p, sensory, da, savevars=savevars, update=true, reportvar=reportvar, showplot=showplot)
 	return (m.weights, m.synapses, reporter)
 end
-function train_model(sensory, nn, numsteps, gf::GifPlot)
+function train_model(sensory, nn, numsteps, gf::GifPlot; update=true, normweights=false)
 	
 	p = get_parameters()
 	m = MatrixTypes(initialise_matrices(nn, p)...)
-	
 	da = 0
 
-	for t = 1:numsteps
-	
-		BA, da = inputyandreward!(t, m.input.layers[1], sensory, p.τ[1], da=da)
-		for layer = 1:length(nn)
-			update_activation!(t, layer, nn, m, p) #these haven't been defined: maybe have another get function for these?
-			if layer !== length(nn)
-				update_ACh!(t, layer, m, p, da)
-				calc_input!(layer, m, p)
-				if layer == 2
-					update_weights!(t, layer, m, p, da)
-				end
-			end
-		end
-		gf = gifnetwork(gf, init_plot(), t, nn, m)		
-	end
-
+	gf = run_all_steps(nn, numsteps, m, p, sensory, da, gf, update=update, normweights=normweights)	
 	return (m.weights, m.synapses, gf)
 end
 
@@ -141,26 +154,14 @@ function test_model(sensory, nn, numsteps, weights, synapses; showplot=false, gi
 	reporter = run_all_steps(nn, numsteps, m, p, sensory, da, savevars=savevars, update=false, reportvar=reportvar)
 	return (m.weights, m.synapses, reporter)
 end
-function test_model(sensory, nn, numsteps, weights, synapses, gf::GifPlot)
+function test_model(sensory, nn, numsteps, weights, synapses, gf::GifPlot; update=false, normweights=false)
 	
 	p = get_parameters()
 	m = MatrixTypes(initialise_matrices(nn, p, weights, synapses)...)
 	
 	da = 0
 
-	for t = 1:numsteps
-	
-		BA, da = inputandreward!(t, m.input.layers[1], sensory, p.τ[1], da=da)
-		for layer = 1:length(nn)
-			update_activation!(t, layer, nn, m, p)
-			if layer !== length(nn)
-				update_ACh!(t, layer, m, p, da)
-				calc_input!(layer, m, p)
-			end
-		end
-		gf = gifnetwork(gf, init_plot(), t, nn, m)
-	end	
-
+	gf = run_all_steps(nn, numsteps, m, p, sensory, da, gf, update=update, normweights=normweights)	
 	return gf
 end
 

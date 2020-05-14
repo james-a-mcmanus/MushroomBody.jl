@@ -29,7 +29,7 @@ function networkplot(p, nn, connections::SynapseLayers)
 
 	return p
 end
-function networkplot(p, nn, connections::SynapseLayers, weights::SynapseLayers; maxneurons=50)
+function networkplot(p, nn, connections::SynapseLayers, weights::SynapseLayers; maxneurons=100)
 
 	nn = min.(maxneurons, nn)
 	ycoords, xcoords = neuronplot!(p, nn)
@@ -46,7 +46,7 @@ function networkplot(p, nn, connections::SynapseLayers, weights::SynapseLayers; 
 
 	return p	
 end
-function networkplot(p, nn, m::MatrixTypes; maxneurons=50)
+function networkplot(p, nn, m::MatrixTypes; maxneurons=100)
 
 	nn = min.(maxneurons, nn)
 	ycoords, xcoords = neuronplot!(p, nn, m, maxneurons)
