@@ -29,7 +29,7 @@ function networkplot(p, nn, connections::SynapseLayers)
 
 	return p
 end
-function networkplot(p, nn, connections::SynapseLayers, weights::SynapseLayers; maxneurons=100)
+function networkplot(p, nn, connections::SynapseLayers, weights::SynapseLayers; maxneurons=50)
 
 	nn = min.(maxneurons, nn)
 	ycoords, xcoords = neuronplot!(p, nn)
@@ -46,7 +46,7 @@ function networkplot(p, nn, connections::SynapseLayers, weights::SynapseLayers; 
 
 	return p	
 end
-function networkplot(p, nn, m::MatrixTypes; maxneurons=100)
+function networkplot(p, nn, m::MatrixTypes; maxneurons=50)
 
 	nn = min.(maxneurons, nn)
 	ycoords, xcoords = neuronplot!(p, nn, m, maxneurons)
@@ -72,7 +72,7 @@ function shownetwork(p,t, nn, m::MatrixTypes; framerate=1)
 	end
 end
 function gifnetwork(gf::GifPlot, p, t, nn, m::MatrixTypes)
-	networkplot(p,nn,m.weights, m.spiked)
+	networkplot(p,nn,m)
 	frame(gf.anim)
 	return gf
 end
@@ -216,7 +216,6 @@ function plotmeanlayer!(p, data::Array{<:BrainTypes,N}) where {N}
 	plot!(p,means)
 	return p
 end
-
 function meanlayer(data::Array{<:BrainTypes,N}) where {N}
 
 	numsteps = length(data)
@@ -229,4 +228,20 @@ function meanlayer(data::Array{<:BrainTypes,N}) where {N}
 		end
 	end
 	return out
+end
+
+
+function display_sensory(p, sensory::AbstractInput)
+	heatmap!(p, reshape(sensory,length(sensory),1), color=:grays, axis=nothing)
+end
+
+function display_sensory(sensory::InputSequence; fname="sensory_sequence.gif")
+	
+	p = heatmap(axis=nothing, color=:grays)
+	gf = GifPlot(pwd() * "\\output\\figures\\" * fname)
+	for s in sensory
+		display_sensory(p, s)
+		frame(gf.anim)
+	end
+	gif(gf.anim,gf.fname,fps=2)
 end
