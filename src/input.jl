@@ -34,7 +34,14 @@ struct RestInput{N} <: AbstractInput{N}
 	da_bool::Vector{Bool}
 	cum_stages::Vector{Int}	
 end
-Inputs = Union{RandInput, SparseInput, RestInput}
+struct SparseRandInput{N} <: AbstractInput{N}
+	data::Array{<:Any,N}
+	stages::Vector{Int}
+	input_bool::Vector{Bool}
+	da_bool::Vector{Bool}
+	cum_stages::Vector{Int}		
+end
+Inputs = Union{RandInput, SparseInput, RestInput, SparseRandInput}
 
 
 """
@@ -53,6 +60,17 @@ function SparseInput(arraysize::Tuple; density=0.1, filler=450, stages=[0,1,0], 
 	init[map(x -> 1:x, fillsize)...] .= filler * ones(fillsize)
 	shuffle!(init)
 	return AbstractInput(SparseInput, init, stages=stages, input_bool=input_bool, da_bool=da_bool)
+end
+
+SparseRandInput(A::Array; stages=[0,1,0], input_bool=Bool[0,1,0], da_bool=Bool[0,1,0]) = SparseRandInput(A, stages, input_bool, da_bool)
+SparseRandInput(A::Array, stages::Vector{Int}, input_bool::Vector{Bool}, da_bool::Vector{Bool}) = SparseRandInput(A, stages, input_bool, da_bool, cumsum(stages))
+function SparseRandInput(arraysize::Tuple; density=0.1, mean_filler=450, filler_range=50, stages=[0,1,1], input_bool=Bool[0,1,0], da_bool=Bool[0,1,0])
+
+	out = fill(0.0, arraysize)
+	fillsize = round.(Int, arraysize .* density)
+	out[map(x -> 1:x, fillsize)...] .= mean_filler .* ones(fillsize) .+ filler_range .* randn(fillsize)
+	shuffle!(out)
+	return AbstractInput(SparseRandInput, out, stages=stages, input_bool=input_bool, da_bool=da_bool)
 end
 
 RestInput(A::Array; stages=[0,1,0], input_bool=Bool[0,1,0], da_bool=Bool[0,1,0]) = RestInput(A, stages, input_bool, da_bool)

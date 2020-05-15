@@ -7,6 +7,7 @@ function update_activation!(t, layer, nn, matrices, parameters)
 	ξ = generate_noise(σ,nn[layer])
 	update_voltage!(v, vr, vt, rec, I, ξ, C, k, δt)
 	update_recovery!(v, vr, rec, a, b, δt)
+	layer==2 && apl_inhibition2!(matrices, parameters)
 	update_spikes!(v, sp, spt, t, vt, rec, c, d)
 end
 
@@ -46,12 +47,32 @@ function calc_input!(l, m, p; rev=0)
 end
 
 
-function calc_apl_inhibition(m, p)
-# i'm thinking we'll calculate this based on the ACh output of the KC layer.
-# don't exactly know what the function should be i've not modelled any inhibitory input.
-# could base it off some chlorine current (i think it's GABA?)
-# could just subtract it from the input for next timestep
-
-	m.input.layers[2] .=- sum(m.ACh[2].layers)
-	
+function apl_inhibition!(m, p)
+	# i'm thinking we'll calculate this based on the ACh output of the KC layer.
+	# don't exactly know what the function should be i've not modelled any inhibitory input.
+	# could base it off some chlorine current (i think it's GABA?)
+	# could just subtract it from the input for next timestep
+	m.activation.layers[2] .= calc_inhibit(m.activation.layers[2], p.vt[2], 0.001)
 end
+function calc_inhibit(activations, vt, modif)
+	divisor = sum(activations[activations .> vt] .- vt)
+	divisor==0 && return activations
+	activations .- (modif .* divisor)
+end
+
+function apl_inhibition2!(m,p)
+
+	a = m.activation.layers[2]
+
+	to_ceil = bottomk(a, length(a) - 5)
+	a[to_ceil] .= ceiling.(a[to_ceil],p.vt[2])
+
+end
+
+function ceiling(num, ce)
+
+	num > ce ? ce : num
+end
+
+topk(a, k) = partialsortperm(a, 1:k, rev=true)
+bottomk(a, k) = partialsortperm(a, 1:k)
