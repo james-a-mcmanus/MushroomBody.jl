@@ -4,12 +4,15 @@ function update_activation!(t, layer, nn, matrices, parameters)
 	vt, vr, C, a, b, c, d, k, σ, δt = get_parameters(update_activation!,parameters,layer)
 	v, sp, spt, rec, I = get_matrices(update_activation!, matrices, layer)
 
-	ξ = generate_noise(σ,nn[layer])
+	ξ = generate_noise(σ,nn[layer])	
+
 	update_voltage!(v, vr, vt, rec, I, ξ, C, k, δt)
+	
 	update_recovery!(v, vr, rec, a, b, δt)
-	layer==2 && apl_inhibition2!(matrices, parameters)
 	update_spikes!(v, sp, spt, t, vt, rec, c, d)
-end
+	layer==2 && apl_inhibition2!(matrices, parameters)
+end	
+
 
 function generate_noise(σ,nn)
 
@@ -62,17 +65,26 @@ end
 
 function apl_inhibition2!(m,p)
 
-	a = m.activation.layers[2]
+	spike_ind = m.activation.layers[2] .> p.vt[2]
+	bottom_n = bottomk(m.activation.layers[2][spike_ind], sum(spike_ind) - 5)
 
-	to_ceil = bottomk(a, length(a) - 5)
-	a[to_ceil] .= ceiling.(a[to_ceil],p.vt[2])
+
+	#bottom_spiked = m.activation.layers[2][spike_ind][bottom_n]
+#=
+	if !isempty(bottom_spiked)
+		@infiltrate
+	end
+
+	#const_punish.(bottom_spiked, 20)
+	#bottom_spiked .-= 40000000
+	bottom_spiked .-= 50000000000*sum(bottom_spiked) =#
 
 end
 
-function ceiling(num, ce)
 
-	num > ce ? ce : num
-end
+const_punish(a, c) = a = a - c
+population_punish(a, c, pop) = a = a - c*pop
+sum_activity_punish(a, c, act) = a = a - c*act
 
 topk(a, k) = partialsortperm(a, 1:k, rev=true)
 bottomk(a, k) = partialsortperm(a, 1:k)
