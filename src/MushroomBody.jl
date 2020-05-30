@@ -20,8 +20,9 @@ include("helpers.jl")
 include("input.jl")
 include("Parameters.jl")
 include("plotters.jl")
-include("Tests.jl")
+include("Tests2.jl")
 include("SaveData.jl")
+include("ImageInput.jl")
 
 """
 run the model, i.e. put through a training phase and a test phase.

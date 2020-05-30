@@ -294,7 +294,7 @@ function test_parameter(p, nn; numtrain=4, numtest=4, layer_view=3)
 
 
 	facenum = tuple(nn[1])
-	stimtype = (SparseInput,)
+	stimtype = (ColorInput,)
 	sstages = [20, 50, 0]
 	input = Bool[1,1, 0]
 	dastages = Bool[0,1, 0]

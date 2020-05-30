@@ -41,7 +41,15 @@ struct SparseRandInput{N} <: AbstractInput{N}
 	da_bool::Vector{Bool}
 	cum_stages::Vector{Int}		
 end
-Inputs = Union{RandInput, SparseInput, RestInput, SparseRandInput}
+struct ColorInput{N} <: AbstractInput{N}
+	data::Array{<:Any,N}
+	stages::Vector{Int}
+	input_bool::Vector{Bool}
+	da_bool::Vector{Bool}
+	cum_stages::Vector{Int}
+end
+
+Inputs = Union{RandInput, SparseInput, RestInput, SparseRandInput, ColorInput}
 
 
 """
@@ -126,10 +134,15 @@ function get_input(inseq::InputSequence, t)
 	nowind = time_index(inseq, t)
 	tᵢ = nowind == 1 ? t : t - cumsum(inseq.inputdurations)[nowind-1]
 
-	#tᵢ = 1 + t - cumsum(inseq.inputdurations)[nowind]
 	stage = get_stage(inseq[nowind], tᵢ)
-	return nowind, inseq[nowind].input_bool[stage], inseq[nowind].da_bool[stage] # return 
+	return nowind, inseq[nowind].input_bool[stage], inseq[nowind].da_bool[stage]
 end
+
+function get_input(sensory::AbstractInput, t)
+	stage = get_stage(sensory, t)
+	return sensory.input_bool[stage], sensory.da_bool[stage]
+end
+
 
 get_stage(input::AbstractInput, t) = findfirst(input.cum_stages .>= t)
 
@@ -155,4 +168,13 @@ function inputandreward!(t, input, sensory::InputSequence, τ, da_on; da=0)
 	da = update_da(da, BA, τ)
 
 	return (BA, da)
+end
+
+function inputandreward!(t, input, sensory::AbstractInput, τ, da_on; da=0)
+	give_input, give_da = get_input(sensory, t)
+	input .= give_input ? sensory.data : sensory.default.data
+	BA = give_da ? da_on : 0
+	da = update_da(da, BA, τ)
+
+	return(BA,da)
 end
