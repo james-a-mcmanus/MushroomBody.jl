@@ -245,3 +245,11 @@ function display_sensory(sensory::InputSequence; fname="sensory_sequence.gif")
 	end
 	gif(gf.anim,gf.fname,fps=2)
 end
+
+
+function bar(ydata::Vector{normdata})
+
+	means = [dp.mean for dp in ydata]
+	std = [dp.std for dp in ydata]
+	bar(means, yerror=std)
+end

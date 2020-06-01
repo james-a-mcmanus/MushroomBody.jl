@@ -154,5 +154,11 @@ function update_pre_layers(t, layer, m, p, da; update=true)
 	(layer == 2 && update) && update_weights!(t, layer, m, p, da)	
 end
 
+# this is actually just a less efficient version of initialise_matrices(_,_,weights,synapses)
+function reset(nn, p, weights, synapses)
+
+	return MatrixTypes(initialise_matrices(nn, p, weights, synapses)...) 
+end
+
 
 end

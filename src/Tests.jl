@@ -175,7 +175,7 @@ function many_stimuli()
 	for tr in 1:numtrain
 		numsteps = duration(sensory[tr])
 		reporter = run_all_steps(nn, numsteps, m, p, sensory[tr], da, savevars=nothing, update=true, reportvar=reportvar)
-		m = m = reset(nn, p, m.weights, m.synapses)
+		m = reset(nn, p, m.weights, m.synapses)
 	end
 
 	# 

@@ -140,13 +140,19 @@ function test_weight()
 	display(p)
 end
 
-const nn = [100,1000,1]
+const nn = [50,1000,1]
 const stimtype = (ColorInput,)
 const sstages = [20, 50, 0]
-const input = Bool[1,1, 0]
-const dastages = Bool[0,1, 0]
+const inputstages = Bool[1,1,0]
+const dastages = Bool[0,1,0]
 const reportvar = "spiked"
 const init_da=0
+
+struct normdata
+	mean::Float64
+	std::Float64
+end
+normdata(intuple::Tuple{Float64,Float64}) = normdata(intuple[1],intuple[2])
 
 function setup()
 
@@ -154,11 +160,15 @@ function setup()
 	m = MatrixTypes(initialise_matrices(nn, p)...)
 	return (p, m)
 end
+function initialise_reporter(sensory_input, m)
+
+	[initialise_return_variable(duration(s), m, reportvar) for (i,s) in enumerate(sensory_input)]
+end
 
 function train_input!(p, m, sensory_input::AbstractInput)
 	numsteps = duration(sensory_input)
 	da = init_da
-	run_all_steps(nn, numsteps, m, p, sensory_input, da, savevars=nothing, update=true, normweights=true, reportvar=reportvar)
+	run_all_steps(nn, numsteps, m, p, sensory_input, da, savevars=nothing, update=true, normweights=true)
 	return reset(nn, p, m.weights, m.synapses)
 end
 
@@ -167,4 +177,37 @@ function train_input!(p, m, sensory_input::InputSequence)
 	for s in sensory_input
 		train_input!(p, m, s)
 	end
+end
+
+function test_input(p, m, sensory_input::AbstractInput)
+	m = reset(nn, p, m.weights, m.synapses)
+	numsteps = duration(sensory_input)
+	da = init_da
+	return run_all_steps(nn, numsteps, m, p, sensory_input, da, savevars=nothing, update=false, normweights=true, reportvar="spiked")
+end
+
+function test_input(p, m, sensory_input::InputSequence)
+	report = initialise_reporter(sensory_input, m)
+	for (i, s) in enumerate(sensory_input)
+		report[i] = test_input(p, m, s)
+	end
+	return report
+end
+
+function spiked_statistics(reporter::Array{NeuronLayers{Bool,1}}; layer=3)
+
+	meanspikes = zeros(length(reporter))
+	for (i,timestep) in enumerate(reporter)
+		meanspikes[i] = mean(timestep.layers[layer])
+	end
+
+	return mean(meanspikes), std(meanspikes)
+end
+
+function spiked_statistics(reporter::Array{Array{NeuronLayers{Bool,1},1},1}; layer=3)
+	stats = Vector{normdata}(undef, length(reporter))
+	for (i, epoch) in enumerate(reporter)
+		stats[i] = normdata(spiked_statistics(epoch, layer=layer))
+	end
+	return stats
 end

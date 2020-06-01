@@ -10,7 +10,7 @@ function update_activation!(t, layer, nn, matrices, parameters)
 	
 	update_recovery!(v, vr, rec, a, b, δt)
 	update_spikes!(v, sp, spt, t, vt, rec, c, d)
-	layer==2 && apl_inhibition2!(matrices, parameters)
+	#layer==2 && apl_inhibition2!(matrices, parameters)
 end	
 
 
