@@ -1,4 +1,4 @@
-using Random, StaticArrays, Infiltrator
+using Random, StaticArrays, Infiltrator, ColorCoding
 import Base.size, Base.sum, Base.show
 
 abstract type StandardArray{T,N} <: AbstractArray{T,N} end
@@ -47,6 +47,7 @@ struct ColorInput{N} <: AbstractInput{N}
 	input_bool::Vector{Bool}
 	da_bool::Vector{Bool}
 	cum_stages::Vector{Int}
+	image::Image
 end
 
 Inputs = Union{RandInput, SparseInput, RestInput, SparseRandInput, ColorInput}

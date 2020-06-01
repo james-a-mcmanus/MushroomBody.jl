@@ -50,6 +50,13 @@ function calc_input!(l, m, p; rev=0)
 end
 
 
+
+
+
+
+
+
+
 function apl_inhibition!(m, p)
 	# i'm thinking we'll calculate this based on the ACh output of the KC layer.
 	# don't exactly know what the function should be i've not modelled any inhibitory input.
@@ -80,7 +87,6 @@ function apl_inhibition2!(m,p)
 	bottom_spiked .-= 50000000000*sum(bottom_spiked) =#
 
 end
-
 
 const_punish(a, c) = a = a - c
 population_punish(a, c, pop) = a = a - c*pop
