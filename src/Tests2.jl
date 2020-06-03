@@ -211,3 +211,19 @@ function spiked_statistics(reporter::Array{Array{NeuronLayers{Bool,1},1},1}; lay
 	end
 	return stats
 end
+
+function kenyon_cell_representation(p, m, sensory_input::AbstractInput)
+
+	spiked = test_input(p,m,sensory_input)
+
+	normalise(spike_representation(spiked, nn[2], layer=2),1)
+end
+
+function spike_representation(spiked, neurons_in_layer; layer=2)
+
+	representation = zeros(neurons_in_layer)
+	for timestep in spiked
+		representation += timestep.layers[layer]
+	end
+	representation ./ length(spiked)
+end
