@@ -27,6 +27,7 @@ mutable struct ParameterTypes{N}
 	syn_density::NTuple{N,Number}
 	weight_target::NTuple{N,Number}
 	normalise_to::NTuple{N,Number}
+	winners::NTuple{N,Number}
 	da_on::Number
 	δt::Number
 end
@@ -79,7 +80,8 @@ function get_parameters()
 	syn_density = (0.1, 1, 0.1)
 	weight_target = (200, 2000, 200)
 	normalise_to = (10000, 200, 200)
-	da_on = 0.01#.0009
+	winners = (10, 10, 10)
+	da_on = 0.01#0.5#.0009
 	δt = 1
 
 	parameters = ParameterTypes(
@@ -109,6 +111,7 @@ function get_parameters()
 		syn_density,
 		weight_target,
 		normalise_to,
+		winners,
 		da_on,
 		δt
 		)

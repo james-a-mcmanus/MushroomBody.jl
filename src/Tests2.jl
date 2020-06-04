@@ -153,6 +153,20 @@ struct normdata
 	std::Float64
 end
 normdata(intuple::Tuple{Float64,Float64}) = normdata(intuple[1],intuple[2])
+function normdata(norm::Vector{normdata})
+	
+	mean = 0
+	std = 0
+
+
+	for n in norm
+		mean += n.mean
+		std += n.std
+	end
+
+	return normdata(mean/length(norm),std/length(norm))
+end
+
 
 function setup()
 
@@ -201,7 +215,7 @@ function spiked_statistics(reporter::Array{NeuronLayers{Bool,1}}; layer=3)
 		meanspikes[i] = mean(timestep.layers[layer])
 	end
 
-	return mean(meanspikes), std(meanspikes)
+	return normdata(mean(meanspikes), std(meanspikes))
 end
 
 function spiked_statistics(reporter::Array{Array{NeuronLayers{Bool,1},1},1}; layer=3)
@@ -225,3 +239,4 @@ function spike_representation(spiked, neurons_in_layer; layer=2)
 	end
 	representation ./ length(spiked)
 end
+

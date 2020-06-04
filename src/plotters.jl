@@ -252,3 +252,21 @@ function bar(ydata::Vector{normdata})
 	std = [dp.std for dp in ydata]
 	Plots.bar(means, yerror=std)
 end
+
+function bar!(ydata::Vector{normdata})
+
+	means = [dp.mean for dp in ydata]
+	std = [dp.std for dp in ydata]
+	Plots.bar!(means, yerror=std)
+end
+
+function scatter(ydata::Array{normdata})
+
+	means = [dp.mean for dp in ydata]
+	std = [dp.std for dp in ydata]
+	Plots.scatter(means[1], means[2], means[3])
+
+end
+
+
+
