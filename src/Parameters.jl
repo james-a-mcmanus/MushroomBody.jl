@@ -25,7 +25,8 @@ mutable struct ParameterTypes{N}
 	σ::NTuple{N,Number}
 	init_weight::NTuple{N,Number}
 	syn_density::NTuple{N,Number}
-	weight_target::NTuple{N,Number}	
+	weight_target::NTuple{N,Number}
+	normalise_to::NTuple{N,Number}
 	da_on::Number
 	δt::Number
 end
@@ -56,7 +57,7 @@ function get_parameters()
 	c = (-65, -65, -65)
 	d = (8, 8, 8)
 	C = (100, 4, 100)
-	noisestd = (0.05, 0.05, 0.05)    
+	noisestd = (0.05, 0.05, 0.05)
 	vr = (-60, -85, -60)
 	cap = (100, 4, 100)
 	a = (0.3, 0.01, 0.3)#(0.3, 0.01, 0.3)
@@ -75,8 +76,9 @@ function get_parameters()
 	miniw = (0.0, 0.0, 0.0)
 	σ = (0.05, 0.05, 0.05)
 	init_weight = (20, 20, 20)
-	syn_density = (0.02, 1, 0.1)
+	syn_density = (0.1, 1, 0.1)
 	weight_target = (200, 2000, 200)
+	normalise_to = (10000, 200, 200)
 	da_on = 0.01#.0009
 	δt = 1
 
@@ -106,6 +108,7 @@ function get_parameters()
 		init_weight,
 		syn_density,
 		weight_target,
+		normalise_to,
 		da_on,
 		δt
 		)
