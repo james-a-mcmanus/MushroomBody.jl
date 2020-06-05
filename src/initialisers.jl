@@ -106,14 +106,20 @@ SynapseLayer(filler::T, dims::NTuple{N,Int}) where {T,N} = SynapseLayer{T,N}(fil
 #-------------------------------------------------------------------------------------------------------#
 #										Initialising Functions
 #-------------------------------------------------------------------------------------------------------#
-function create_synapses(::Type{SynapseLayer}, lyrsize::NTuple{2,Int}; syndens=0.1, weight=20.0)
+function create_synapses(::Type{SynapseLayer}, lyrsize::NTuple{2,Int}; syndens::Float64=0.1, weight=20.0)
+
+	syndens==1 && return SynapseLayer(ones(lyrsize...))
+	syndens==0 && return SynapseLayer(zeros(lyrsize...))
+	ns = Int(round(syndens*lyrsize[1]))
+	return create_synapses(SynapseLayer, lyrsize, syndens=ns, weight=weight)
+end
+
+function create_synapses(::Type{SynapseLayer}, lyrsize::NTuple{2,Int}; syndens::Int=10, weight=20.0)
 
 	syns = SynapseLayer(zeros(lyrsize...))
-	syndens==1 && return SynapseLayer(ones(lyrsize...))
-	ns = Int(round(syndens*lyrsize[1]))
-	cons = Array{Int,2}(undef,ns,lyrsize[2])
+	cons = Array{Int,2}(undef,syndens,lyrsize[2])
 	for i = 1:lyrsize[2]
-		cons[:,i] .= shuffle(1:lyrsize[1])[1:ns]
+		cons[:,i] .= shuffle(1:lyrsize[1])[1:syndens]
 	end
 
 	for postlyr = 1:lyrsize[2]

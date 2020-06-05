@@ -78,6 +78,8 @@ function get_parameters()
 	σ = (0.05, 0.05, 0.05)
 	init_weight = (20, 20, 20)
 	syn_density = (0.1, 1, 0.1)
+	num_synapses = Int.(round.(nn .* syn_density))
+	num_synapses = (5, nn[2], 1)
 	weight_target = (200, 2000, 200)
 	normalise_to = (10000, 200, 200)
 	winners = (10, 10, 10)
@@ -108,7 +110,7 @@ function get_parameters()
 		miniw,
 		σ,
 		init_weight,
-		syn_density,
+		num_synapses,
 		weight_target,
 		normalise_to,
 		winners,
