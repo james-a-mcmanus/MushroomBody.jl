@@ -1,7 +1,8 @@
-const ImageFolder = raw"C:\Users\James\.julia\dev\MushroomBody\ImageData\kaggle\natural_images\flower"
+const flowerFolder = raw"C:\Users\James\.julia\dev\MushroomBody\ImageData\kaggle\natural_images\flower"
+const imageFolder = raw"C:\Users\James\.julia\dev\MushroomBody\ImageData\kaggle\natural_images"
 
-function ColorInput(arraysize::Tuple; normalise_to=300, stages=[0,1,0], input_bool=Bool[0,1,0], da_bool=Bool[0,1,0])	
-	img = random_image(ImageFolder)
+function ColorInput(arraysize::Tuple; folder=flowerFolder, normalise_to=300, stages=[0,1,0], input_bool=Bool[0,1,0], da_bool=Bool[0,1,0])	
+	img = random_image(folder)
 	init = normalise(bin(get_hues(img),arraysize[1]),normalise_to)
 	return ColorInput(init, stages, input_bool, da_bool, cumsum(stages),img)
 end
@@ -33,12 +34,24 @@ function display_hues(hues)
 	return out
 end
 
-function color_sequence(arraysize, nstim; stages=[0,1,0], input_bool=Bool[0,1,0], da_bool=Bool[0,1,0])
+function color_sequence(arraysize, nstim; folder=imageFolder, stages=[0,1,0], input_bool=Bool[0,1,0], da_bool=Bool[0,1,0])
 
 	out = Vector{Inputs}(undef, nstim)	
-
+	multifolders = readdir(folder)
 	for i = 1:nstim
-		out[i] = ColorInput(arraysize, stages=stages, input_bool=input_bool, da_bool=da_bool)
+		image_folder = folder * "\\" * rand(multifolders)
+		out[i] = ColorInput(arraysize, folder=image_folder, stages=stages, input_bool=input_bool, da_bool=da_bool)
+	end
+
+	return InputSequence(out, RestInput(arraysize))
+end
+
+
+function flower_sequence(arraysize, nstim; folder=flowerFolder, stages=[0,1,0], input_bool=Bool[0,1,0], da_bool=Bool[0,1,0])
+
+	out = Vector{Inputs}(undef, nstim)	
+	for i = 1:nstim
+		out[i] = ColorInput(arraysize, folder=folder, stages=stages, input_bool=input_bool, da_bool=da_bool)
 	end
 
 	return InputSequence(out, RestInput(arraysize))
