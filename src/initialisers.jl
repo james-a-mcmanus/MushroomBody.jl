@@ -106,15 +106,15 @@ SynapseLayer(filler::T, dims::NTuple{N,Int}) where {T,N} = SynapseLayer{T,N}(fil
 #-------------------------------------------------------------------------------------------------------#
 #										Initialising Functions
 #-------------------------------------------------------------------------------------------------------#
-function create_synapses(::Type{SynapseLayer}, lyrsize::NTuple{2,Int}; syndens::Float64=0.1, weight=20.0)
+function create_synapses(::Type{SynapseLayer}, lyrsize::NTuple{2,Int}, syndens::Float64; weight=20.0)
 
 	syndens==1 && return SynapseLayer(ones(lyrsize...))
 	syndens==0 && return SynapseLayer(zeros(lyrsize...))
 	ns = Int(round(syndens*lyrsize[1]))
-	return create_synapses(SynapseLayer, lyrsize, syndens=ns, weight=weight)
+	return create_synapses(SynapseLayer, lyrsize, ns, weight=weight)
 end
 
-function create_synapses(::Type{SynapseLayer}, lyrsize::NTuple{2,Int}; syndens::Int=10, weight=20.0)
+function create_synapses(::Type{SynapseLayer}, lyrsize::NTuple{2,Int}, syndens::Int; weight=20.0)
 
 	syns = SynapseLayer(zeros(lyrsize...))
 	cons = Array{Int,2}(undef,syndens,lyrsize[2])
@@ -130,7 +130,7 @@ end
 
 Iterable = Union{Array, Tuple}
 
-function create_synapses(::Type{SynapseLayers}, nn::Array; syndens=0.1, weight=2)
+function create_synapses(::Type{SynapseLayers}, nn::Array, syndens; weight=2)
 
 	lyrsizes = [(nn[i],nn[i+1]) for i = 1:length(nn)-1]
 	SynapseLayers([create_synapses(SynapseLayer, lrs) for lrs in lyrsizes])
@@ -140,7 +140,7 @@ function create_synapses(::Type{SynapseLayers}, nn::Iterable, syndens::Iterable,
 	lyrsizes = [(nn[i],nn[i+1]) for i = 1:length(nn)-1]
 	out = Array{SynapseLayer,1}(undef,length(nn)-1)
 	for (i, ls) in enumerate(lyrsizes)
-		out[i] = create_synapses(SynapseLayer, ls, syndens=syndens[i], weight=weight[i])
+		out[i] = create_synapses(SynapseLayer, ls, syndens[i], weight=weight[i])
 	end
 	return SynapseLayers{Float64,2}(out)
 end

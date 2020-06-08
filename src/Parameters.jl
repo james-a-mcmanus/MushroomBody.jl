@@ -80,9 +80,9 @@ function get_parameters()
 	syn_density = (0.1, 1, 0.1)
 	num_synapses = Int.(round.(nn .* syn_density))
 	num_synapses = (5, nn[2], 1)
-	weight_target = (200, 2000, 200)
-	normalise_to = (10000, 200, 200)
-	winners = (10, 10, 10)
+	weight_target = (0, 2000, 200)
+	normalise_to = (20000, 400, 200)
+	winners = (50, 100, 10)
 	da_on = 0.01#0.5#.0009
 	δt = 1
 

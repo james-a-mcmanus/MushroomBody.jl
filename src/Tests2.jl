@@ -140,7 +140,7 @@ function test_weight()
 	display(p)
 end
 
-const nn = [50,1000,1]
+const nn = [100,1000,1]
 const stimtype = (ColorInput,)
 const sstages = [20, 50, 0]
 const inputstages = Bool[1,1,0]
@@ -174,6 +174,13 @@ function setup()
 	m = MatrixTypes(initialise_matrices(nn, p)...)
 	return (p, m)
 end
+
+function setup(p::ParameterTypes)
+
+	m = MatrixTypes(initialise_matrices(nn, p)...)
+	return (p, m)
+end
+
 function initialise_reporter(sensory_input, m)
 
 	[initialise_return_variable(duration(s), m, reportvar) for (i,s) in enumerate(sensory_input)]
@@ -240,3 +247,21 @@ function spike_representation(spiked, neurons_in_layer; layer=2)
 	representation ./ length(spiked)
 end
 
+function spike_learning_measure(p,m, train, test)
+    
+    for sensory_train in train
+        train_input!(p,m,sensory_train)
+    end
+    
+    test_spikes = Vector{normdata}(undef, length(test))
+    for (i,sensory_test) in enumerate(test)
+        test_spikes[i] = spiked_statistics(test_input(p,m,sensory_test))
+    end
+    
+    train_spikes = similar(test_spikes)
+    for (i,sensory_train) in enumerate(train)
+        train_spikes[i] = spiked_statistics(test_input(p,m,sensory_train))
+    end    
+    
+    return (train_spikes, test_spikes)
+end
