@@ -265,8 +265,33 @@ function scatter(ydata::Array{normdata})
 	means = [dp.mean for dp in ydata]
 	std = [dp.std for dp in ydata]
 	Plots.scatter(means[1], means[2], means[3])
-
 end
 
 
+function raster(spikes::Array{NeuronLayers{Bool,1},1})
 
+	total_length = length(spikes)
+	numlayers = length(spikes[1].layers)
+	raster_out = [zeros(Bool, length(layer),total_length) for layer in spikes[1].layers ]
+
+	for t in 1:total_length
+
+		for l in 1:numlayers
+			raster_out[l][:,t] .= spikes[t].layers[l]
+		end
+	end
+	return raster_out
+end
+
+function raster(spikes::Array{NeuronLayers{Bool,1},1}, layer::Int)
+
+	total_length = length(spikes)
+	raster_out = zeros(Bool, length(spikes[1].layers[layer]),total_length)
+
+	for t in 1:total_length
+
+			raster_out[:,t] .= spikes[t].layers[layer]
+
+	end
+	return raster_out
+end

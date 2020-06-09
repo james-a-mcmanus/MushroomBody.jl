@@ -140,7 +140,7 @@ function test_weight()
 	display(p)
 end
 
-const nn = [100,1000,1]
+const nn = [10,100,1]
 const stimtype = (ColorInput,)
 const sstages = [20, 50, 0]
 const inputstages = Bool[1,1,0]
@@ -264,4 +264,24 @@ function spike_learning_measure(p,m, train, test)
     end    
     
     return (train_spikes, test_spikes)
+end
+
+function manhatten_distance(array1, array2)
+
+	sum( abs.( array1 .- array2 ) )
+
+end
+
+function nearest_neighbour(array1, all_other_arrays)
+
+	distances = zeros(length(all_other_arrays))
+
+	for (i,a) in enumerate(all_other_arrays)
+
+		distances[i] = manhatten_distance(array1, a) 
+	
+	end
+
+	return findmin(distances)
+
 end

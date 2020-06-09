@@ -1,13 +1,13 @@
 const flowerFolder = raw"C:\Users\James\.julia\dev\MushroomBody\ImageData\kaggle\natural_images\flower"
 const imageFolder = raw"C:\Users\James\.julia\dev\MushroomBody\ImageData\kaggle\natural_images"
 
-function ColorInput(arraysize::Tuple; folder=flowerFolder, normalise_to=300, stages=[0,1,0], input_bool=Bool[0,1,0], da_bool=Bool[0,1,0])	
+function ColorInput(arraysize::Tuple; folder=flowerFolder, normalise_to=350, stages=[0,1,0], input_bool=Bool[0,1,0], da_bool=Bool[0,1,0])	
 	img = random_image(folder)
 	init = normalise(bin(get_hues(img),arraysize[1]),normalise_to)
 	return ColorInput(init, stages, input_bool, da_bool, cumsum(stages),img)
 end
 
-function ColorInput(img::Image, arraysize::Tuple; normalise_to=300, stages=[0,1,0], input_bool=Bool[0,1,0], da_bool=Bool[0,1,0])
+function ColorInput(img::Image, arraysize::Tuple; normalise_to=350, stages=[0,1,0], input_bool=Bool[0,1,0], da_bool=Bool[0,1,0])
 	
 	ColorInput(normalise(bin(get_hues(img), arraysize[1]), normalise_to), stages, input_bool, da_bool, cumsum(stages), img)
 end

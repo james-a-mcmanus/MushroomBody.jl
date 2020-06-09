@@ -46,7 +46,7 @@ function calc_input!(l, m, p; rev=0)
 	l==2 && winner_takes_all(ACh,p.winners[l])
 
 	input .= dropdims(sum( @.(w * ACh * (rev - v)'), dims=1), dims=1) #dropdims(sum(w .* ACh .* (rev .- v)', dims = 1), dims=1)
-
+	
 	l==1 && winner_takes_all(input, p.winners[l])
 
 end
@@ -64,7 +64,9 @@ function subtractive_normalise(input, λ)
 end
 
 function winner_takes_all(input, numwinners)
-
+	if length(input) == numwinners
+		return
+	end
 	anti_assign(input, maxk(input,numwinners), 0.0)
 end
 
