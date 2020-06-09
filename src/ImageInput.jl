@@ -34,7 +34,7 @@ function display_hues(hues)
 	return out
 end
 
-function color_sequence(arraysize, nstim; folder=imageFolder, stages=[0,1,0], input_bool=Bool[0,1,0], da_bool=Bool[0,1,0])
+function many_folders_sequence(arraysize, nstim; folder=imageFolder, stages=[0,1,0], input_bool=Bool[0,1,0], da_bool=Bool[0,1,0])
 
 	out = Vector{Inputs}(undef, nstim)	
 	multifolders = readdir(folder)
@@ -47,7 +47,7 @@ function color_sequence(arraysize, nstim; folder=imageFolder, stages=[0,1,0], in
 end
 
 
-function flower_sequence(arraysize, nstim; folder=flowerFolder, stages=[0,1,0], input_bool=Bool[0,1,0], da_bool=Bool[0,1,0])
+function color_sequence(arraysize, nstim; folder=flowerFolder, stages=[0,1,0], input_bool=Bool[0,1,0], da_bool=Bool[0,1,0])
 
 	out = Vector{Inputs}(undef, nstim)	
 	for i = 1:nstim
@@ -56,3 +56,4 @@ function flower_sequence(arraysize, nstim; folder=flowerFolder, stages=[0,1,0], 
 
 	return InputSequence(out, RestInput(arraysize))
 end
+

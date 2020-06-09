@@ -269,7 +269,6 @@ end
 function manhatten_distance(array1, array2)
 
 	sum( abs.( array1 .- array2 ) )
-
 end
 
 function nearest_neighbour(array1, all_other_arrays)
@@ -283,5 +282,4 @@ function nearest_neighbour(array1, all_other_arrays)
 	end
 
 	return findmin(distances)
-
 end
