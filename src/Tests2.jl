@@ -140,7 +140,6 @@ function test_weight()
 	display(p)
 end
 
-const nn = [10,100,1]
 const stimtype = (ColorInput,)
 const sstages = [20, 50, 0]
 const inputstages = Bool[1,1,0]
@@ -171,7 +170,7 @@ end
 function setup()
 
 	p = get_parameters()
-	m = MatrixTypes(initialise_matrices(nn, p)...)
+	m = MatrixTypes(initialise_matrices(p.nn, p)...)
 	return (p, m)
 end
 
@@ -189,8 +188,8 @@ end
 function train_input!(p, m, sensory_input::AbstractInput)
 	numsteps = duration(sensory_input)
 	da = init_da
-	run_all_steps(nn, numsteps, m, p, sensory_input, da, savevars=nothing, update=true, normweights=true)
-	return reset(nn, p, m.weights, m.synapses)
+	run_all_steps(p.nn, numsteps, m, p, sensory_input, da, savevars=nothing, update=true, normweights=true)
+	return reset(p.nn, p, m.weights, m.synapses)
 end
 
 function train_input!(p, m, sensory_input::InputSequence)
@@ -201,10 +200,10 @@ function train_input!(p, m, sensory_input::InputSequence)
 end
 
 function test_input(p, m, sensory_input::AbstractInput)
-	m = reset(nn, p, m.weights, m.synapses)
+	m = reset(p.nn, p, m.weights, m.synapses)
 	numsteps = duration(sensory_input)
 	da = init_da
-	return run_all_steps(nn, numsteps, m, p, sensory_input, da, savevars=nothing, update=false, normweights=true, reportvar="spiked")
+	return run_all_steps(p.nn, numsteps, m, p, sensory_input, da, savevars=nothing, update=false, normweights=true, reportvar="spiked")
 end
 
 function test_input(p, m, sensory_input::InputSequence)
