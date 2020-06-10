@@ -167,6 +167,8 @@ function normdata(norm::Vector{normdata})
 end
 
 
+
+
 function setup()
 
 	p = get_parameters()
@@ -213,6 +215,12 @@ function test_input(p, m, sensory_input::InputSequence)
 	end
 	return report
 end
+
+
+
+
+
+
 
 function spiked_statistics(reporter::Array{NeuronLayers{Bool,1}}; layer=3)
 

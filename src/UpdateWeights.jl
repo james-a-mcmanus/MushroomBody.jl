@@ -10,6 +10,12 @@ function update_weights!(t, l, m, p, da)
 	w[w .< miniw] .= miniw
 end
 
+function update_γ!(γ, connections::MBONLayer, t, tpre, tpost, tconst, A₋, t₋, δt)
+	for c in connections
+		update_γ!(γ, c, t, tpre, tpost, tconst, A₋, t₋, δt)
+	end
+end
+
 function update_γ!(γ, connections, t, tpre, tpost, tconst, A₋, t₋, δt)
 
 #=	latency = (tpre .- tpost') .* connections

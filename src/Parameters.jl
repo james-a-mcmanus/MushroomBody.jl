@@ -40,8 +40,8 @@ struct MatrixTypes
 	I::NeuronLayers
 	ACh::NeuronLayers
 	input::NeuronLayers
-	synapses::SynapseLayers
-	weights::SynapseLayers
+	synapses::BrainTypes
+	weights::BrainTypes
 	γ::SynapseLayers
 end
 
@@ -131,14 +131,16 @@ function initialise_matrices(nn, p)
 	ACh = NeuronLayers([NeuronLayer(0.0, i) for i in nn])
 	input = NeuronLayers([NeuronLayer(0.0, i) for i in nn])
 
-	weights = create_synapses(SynapseLayers,nn, p.syn_density, p.init_weight)
-	synapses = clone_synapses(weights)
+	weights = create_synapses(SynapseLayers, nn, p.syn_density, p.init_weight)
+	synapses = clone_synapses(create_MBON_synapses(nn, p.syn_density, p.init_weight))
+
 	γ = fill_synapses(SynapseLayers, nn, 0.0)
 
 	return activation, rec, spiked, spt, I, ACh, input, synapses, weights, γ
 end
 
-function initialise_matrices(nn, p, weights::SynapseLayers, synapses::SynapseLayers)
+
+function initialise_matrices(nn, p, weights::SynapseLayers, synapses::BrainTypes)
 
 	activation = NeuronLayers([NeuronLayer(-60.0, i) for i in nn])
 	rec = NeuronLayers([NeuronLayer(0.0, i) for i in nn])

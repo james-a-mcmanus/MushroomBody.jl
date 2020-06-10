@@ -1,7 +1,7 @@
 # this page is going to hold all of the setting-up functions 
 # we will need to know how many neurons are in each layer and how many connections there are between each layer
 using Random, BenchmarkTools
-import Base.size, Base.setindex!, Base.getindex, Base.zero, Base.show, Base.length
+import Base.size, Base.setindex!, Base.getindex, Base.zero, Base.show, Base.length, Base.one
 
 #-------------------------------------------------------------------------------------------------------#
 #											Type Definitions
@@ -21,9 +21,16 @@ struct SynapseLayer{T,N} <: AbstractArray{T,N}
 	dims::NTuple{N,Int}
 end
 
+struct MBONLayer{T,N} <: AbstractArray{T,N}
+	data::Array{T,N}
+	dims::NTuple{N,Int}
+end
+
 struct SynapseLayers{T,N} 
 	layers::Array{SynapseLayer{T,N},1}
 end
+
+
 
 abstract type AbstractSparseConnection{T,Int,N} <: AbstractSparseArray{T,Int,N}
 end
@@ -43,8 +50,14 @@ end
 
 Connection = Union{SparseConnection,DenseConnection}
 NormProduct = Union{Number, AbstractSparseArray}
-ConnectionLayer = Union{NeuronLayer, SynapseLayer}
-BrainTypes = Union{NeuronLayers, SynapseLayers}
+ConnectionLayer = Union{NeuronLayer, SynapseLayer, MBONLayer}
+
+struct DiverseLayers{T}
+	layers::Array{T,1}
+end
+
+Iterable = Union{Array, Tuple}
+BrainTypes = Union{NeuronLayers, SynapseLayers, DiverseLayers}
 
 
 #-------------------------------------------------------------------------------------------------------#
@@ -82,7 +95,7 @@ SparseConnection(A::SparseConnection{T,N}) where {T,N} = SparseConnection(A.data
 
 #		NeuronLayer & SynapseLayer
 #===========================================#
-Base.size(A::ConnectionLayer) = A.dims
+Base.size(A::T) where {T<:ConnectionLayer} = A.dims
 Base.getindex(A::NeuronLayer{T,N}, Ind::Int) where {T,N} = get(A.data, Ind, nothing)
 Base.setindex!(A::NeuronLayer, filler, Ind::Int) where {T,N} = (A.data[Ind] = filler)
 Base.zero(::Type{NeuronLayer{T,N}}) where {T<:Number,N} = NeuronLayer{T,N}([zero(T)],(1,))
@@ -95,19 +108,39 @@ average(A::ConnectionLayer) = sum(A.data) == 0 ? 0 : sum(A.data)/length(A.data)
 average(A::Array{<:BrainTypes,1}) = mean([average(elem) for elem in A])
 
 Base.zero(::Type{SynapseLayer{T,N}}) where {T<:Number, N} = SynapseLayer{T,N}(zeros(Int,ntuple(x->1,N)),ntuple(x->1,N))
-Base.getindex(A::SynapseLayer{T,N}, I::Vararg{Int,N}) where {T,N} = A.data[I...]
-Base.setindex!(A::SynapseLayer{T,N}, filler, I::Vararg{Int,N}) where {T,N} = A.data[I...] = filler
+Base.getindex(A::ConnectionLayer, I::Vararg) = A.data[I...]
+Base.setindex!(A::ConnectionLayer, filler, I::Vararg) = A.data[I...] = filler
 Base.length(bt::BrainTypes) = length(bt.layers)
+
+Base.one(::Type{SynapseLayer{T,N}}) where {T,N} = one(T)
 
 SynapseLayer{T,N}(A::Array{T,N}) where {T,N} = SynapseLayer{T,N}(A,size(A))
 SynapseLayer(A::Array{T,N}) where {T,N} = SynapseLayer{T,N}(A)
 SynapseLayer(filler::T, dims::NTuple{N,Int}) where {T,N} = SynapseLayer{T,N}(fill(filler, dims))
 
+MBONLayer(A::Array{T,N}) where {T,N} = MBONLayer(A, size(A))
 #-------------------------------------------------------------------------------------------------------#
 #										Initialising Functions
 #-------------------------------------------------------------------------------------------------------#
-function create_synapses(::Type{SynapseLayer}, lyrsize::NTuple{2,Int}, syndens::Float64; weight=20.0)
+function create_MBON_synapses(lyrsize::NTuple{2,Int}; weight=20.0)
 
+	num_MBONS = lyrsize[2]
+	synapses = [SynapseLayer(zeros(lyrsize...)) for _ in 1:num_MBONS]
+	for l in 1:num_MBONS
+		synapses[l][:,l] .= weight
+	end
+	return MBONLayer(synapses, size(synapses))
+end
+
+function create_MBON_synapses(nn::Iterable, syndens::Iterable, weight::Iterable)
+	
+	lyrsizes = [(nn[i],nn[i+1]) for i = 1:length(nn)-1]
+		# big horrible list comprehension to get the normal synapses, then the weird synapses
+	out = ([i==length(lyrsizes) ? create_MBON_synapses(lyr, weight=weight[i]) : create_synapses(SynapseLayer, lyr, syndens[i], weight=weight[i]) for (i, lyr) in enumerate(lyrsizes)])
+	DiverseLayers(out)
+end
+
+function create_synapses(::Type{SynapseLayer}, lyrsize::NTuple{2,Int}, syndens::Float64; weight=20.0)
 	syndens==1 && return SynapseLayer(ones(lyrsize...))
 	syndens==0 && return SynapseLayer(zeros(lyrsize...))
 	ns = Int(round(syndens*lyrsize[1]))
@@ -128,7 +161,6 @@ function create_synapses(::Type{SynapseLayer}, lyrsize::NTuple{2,Int}, syndens::
 	return syns
 end
 
-Iterable = Union{Array, Tuple}
 
 function create_synapses(::Type{SynapseLayers}, nn::Array, syndens; weight=2)
 
@@ -145,9 +177,23 @@ function create_synapses(::Type{SynapseLayers}, nn::Iterable, syndens::Iterable,
 	return SynapseLayers{Float64,2}(out)
 end
 
-function clone_synapses(SLS::SynapseLayers; filler=1)
+function clone_synapses(SLS::T; filler=1) where {T<:BrainTypes}
 
-	SynapseLayers([SynapseLayer((l.data .> 0) .* filler) for l in SLS.layers])
+	#T([typeof(l)((l.data .> 0) .* filler) for l in SLS.layers])
+
+	out = [clone_synapses(l, filler=filler) for l in SLS.layers]
+	return T(out)
+end
+
+function clone_synapses(SLS::T; filler=1) where {T<:SynapseLayer}
+
+	SynapseLayer((SLS.data .> 0) .* one(eltype(SLS)) * filler)
+end
+
+function clone_synapses(SLS::T; filler=1) where {T<:MBONLayer}
+
+	# basically just clone the lower layers.
+	MBONLayer([clone_synapses(l, filler=filler) for l in SLS.data])
 end
 
 function fill_synapses(::Type{SynapseLayers}, nn::Array, filler::T) where T

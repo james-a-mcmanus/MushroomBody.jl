@@ -44,11 +44,9 @@ function calc_input!(l, m, p; rev=0)
 	input, w, ACh, v = get_matrices(calc_input!, m, l)
 	
 	l==2 && winner_takes_all(ACh,p.winners[l])
-
 	input .= dropdims(sum( @.(w * ACh * (rev - v)'), dims=1), dims=1) #dropdims(sum(w .* ACh .* (rev .- v)', dims = 1), dims=1)
 	
 	l==1 && winner_takes_all(input, p.winners[l])
-
 end
 
 function divisive_normalise!(input, inmax)
