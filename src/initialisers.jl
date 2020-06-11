@@ -1,64 +1,5 @@
 # this page is going to hold all of the setting-up functions 
 # we will need to know how many neurons are in each layer and how many connections there are between each layer
-using Random, BenchmarkTools
-import Base.size, Base.setindex!, Base.getindex, Base.zero, Base.show, Base.length, Base.one
-
-#-------------------------------------------------------------------------------------------------------#
-#											Type Definitions
-#-------------------------------------------------------------------------------------------------------#
-
-struct NeuronLayer{T,N} <: AbstractArray{T,N}
-	data::Array{T,1}
-	dims::NTuple{1,Int}
-end
-
-struct NeuronLayers{T,N}
-	layers::Array{NeuronLayer{T,N},1}
-end
-
-struct SynapseLayer{T,N} <: AbstractArray{T,N}
-	data::Array{T,N}
-	dims::NTuple{N,Int}
-end
-
-struct MBONLayer{T,N} <: AbstractArray{T,N}
-	data::Array{T,N}
-	dims::NTuple{N,Int}
-end
-
-struct SynapseLayers{T,N} 
-	layers::Array{SynapseLayer{T,N},1}
-end
-
-
-
-abstract type AbstractSparseConnection{T,Int,N} <: AbstractSparseArray{T,Int,N}
-end
-
-abstract type AbstractDenseConnection{T,N} <: AbstractArray{T,N}
-end
-
-struct SparseConnection{T,N} <: AbstractSparseConnection{T,Int,N}
-	data::AbstractSparseArray{T,Int,N}
-	dims::NTuple{N,Int}
-end
-
-struct DenseConnection{T,N} <: AbstractDenseConnection{T,N}
-	data::Array{T,N}
-	dims::NTuple{N,Int}
-end
-
-Connection = Union{SparseConnection,DenseConnection}
-NormProduct = Union{Number, AbstractSparseArray}
-ConnectionLayer = Union{NeuronLayer, SynapseLayer, MBONLayer}
-
-struct DiverseLayers{T}
-	layers::Array{T,1}
-end
-
-Iterable = Union{Array, Tuple}
-BrainTypes = Union{NeuronLayers, SynapseLayers, DiverseLayers}
-
 
 #-------------------------------------------------------------------------------------------------------#
 #										Base Redefinitions
@@ -200,6 +141,21 @@ function fill_synapses(::Type{SynapseLayers}, nn::Array, filler::T) where T
 	lyrsizes = [(nn[i],nn[i+1]) for i = 1:length(nn)-1]
 	SynapseLayers([SynapseLayer(filler, lrs) for lrs in lyrsizes])
 end
+
+function Base.fill!(a::BrainTypes, filler::Iterable)
+
+	for (i,layer) in enumerate(a.layers)
+		fill!(layer, filler[i])
+	end
+end
+
+function Base.fill!(a::BrainTypes, filler)
+
+	for layer in a.layers
+		fill!(layer, filler)
+	end
+end
+Base.fill!(a::ConnectionLayer, filler) = fill!(a.data, filler)
 
 function fillentries!(sparray, filler)
 

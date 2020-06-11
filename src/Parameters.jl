@@ -1,5 +1,3 @@
-import Base: getproperty, setproperty!
-
 mutable struct ParameterTypes{N}
 	nn::Array{Int,1}
 	c::NTuple{N,Number}
@@ -74,7 +72,7 @@ function get_parameters()
 	rev = (0, 0, 0)
 	Φ = (0.5, 0.5, 0.5)
 	τ = (20, 20, 20)
-	miniw = (0.0, 0.0, 0.0)
+	miniw = (0.1, 0.1, 0.1)
 	σ = (0.05, 0.05, 0.05)
 	init_weight = (10, 20, 20)
 	syn_density = (0.1, 1, 0.1)
@@ -82,8 +80,8 @@ function get_parameters()
 	num_synapses = (4, nn[2], 1)
 	weight_target = (10, 4000, 200)
 	normalise_to = (20000, 1000, 200)
-	winners = (1, 10, 10)
-	da_on = 0.3#0.5#.0009
+	winners = (3, 10, 10)
+	da_on = 0.4#0.5#.0009
 	δt = 1
 
 	parameters = ParameterTypes(
@@ -127,7 +125,7 @@ function initialise_matrices(nn, p)
 	rec = NeuronLayers([NeuronLayer(0.0, i) for i in nn])
 	spiked = NeuronLayers([NeuronLayer(false, i) for i in nn])
 	spt = NeuronLayers([NeuronLayer(Int(-1), i) for i in nn])
-	I = NeuronLayers([NeuronLayer(250.0, i) for i in nn])
+	I = NeuronLayers([NeuronLayer(0.0, i) for i in nn])
 	ACh = NeuronLayers([NeuronLayer(0.0, i) for i in nn])
 	input = NeuronLayers([NeuronLayer(0.0, i) for i in nn])
 

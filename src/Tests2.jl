@@ -183,15 +183,15 @@ function setup(p::ParameterTypes)
 end
 
 function initialise_reporter(sensory_input, m)
-
 	[initialise_return_variable(duration(s), m, reportvar) for (i,s) in enumerate(sensory_input)]
 end
 
 function train_input!(p, m, sensory_input::AbstractInput)
 	numsteps = duration(sensory_input)
-	da = init_da
-	run_all_steps(p.nn, numsteps, m, p, sensory_input, da, savevars=nothing, update=true, normweights=true)
-	return reset(p.nn, p, m.weights, m.synapses)
+	da = Dopamine(init_da)
+	run_all_steps(p.nn, numsteps, m, p, sensory_input, da, savevars=nothing, update=true, normweights=false)
+	reset!(m,p)
+	return
 end
 
 function train_input!(p, m, sensory_input::InputSequence)
@@ -202,10 +202,10 @@ function train_input!(p, m, sensory_input::InputSequence)
 end
 
 function test_input(p, m, sensory_input::AbstractInput)
-	m = reset(p.nn, p, m.weights, m.synapses)
+	reset!(m,p)
 	numsteps = duration(sensory_input)
-	da = init_da
-	return run_all_steps(p.nn, numsteps, m, p, sensory_input, da, savevars=nothing, update=false, normweights=true, reportvar="spiked")
+	da = Dopamine(init_da)
+	return run_all_steps(p.nn, numsteps, m, p, sensory_input, da, savevars=nothing, update=false, normweights=false, reportvar="spiked")
 end
 
 function test_input(p, m, sensory_input::InputSequence)
@@ -242,7 +242,7 @@ end
 
 function kenyon_cell_representation(p, m, sensory_input::AbstractInput)
 	spiked = test_input(p,m,sensory_input)
-	representation = spike_representation(spiked, nn[2], layer=2)
+	representation = spike_representation(spiked, p.nn[2], layer=2)
 end
 
 function spike_representation(spiked, neurons_in_layer; layer=2)

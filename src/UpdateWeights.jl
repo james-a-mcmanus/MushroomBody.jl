@@ -1,13 +1,30 @@
 function update_weights!(t, l, m, p, da)
 
-	tconst, A₋, t₋, miniw, δt = get_parameters(update_weights!, p, l)
+	tconst, A₋, t₋, min_w, δt = get_parameters(update_weights!, p, l)
 	w, γ, connections, tpre, tpost = get_matrices(update_weights!, m, l)
 
 	update_γ!(γ, connections, t, tpre, tpost, tconst, A₋, t₋, δt) # update tag
 
-	w .= @. w + (γ * da) * δt
+	update_w(connections, w, min_w, γ, da, δt)
+end
 
-	w[w .< miniw] .= miniw
+
+function update_w(c, w, min_w, γ, da, δt)
+	
+	if sum(da) == 0
+		return
+	end
+	
+	w .= @. w + (γ * sum(da)) * δt
+	w[w .< min_w] .= min_w	
+end
+
+function update_w(con::MBONLayer, w, min_w, γ, da, δt)
+
+	for (i,c) in enumerate(con)
+		update_w(c, w, min_w, γ .* c, da[i], δt)
+	end
+
 end
 
 function update_γ!(γ, connections::MBONLayer, t, tpre, tpost, tconst, A₋, t₋, δt)
@@ -18,14 +35,7 @@ end
 
 function update_γ!(γ, connections, t, tpre, tpost, tconst, A₋, t₋, δt)
 
-#=	latency = (tpre .- tpost') .* connections
-
-	δγ = @. (-γ / tconst) + stdp(latency, A₋, t₋) * Δ( (t - tpre) * (t - tpost') )
-
-	γ .= γ .+ δγ .* δt=#
-
 	γ .= @. γ + δt * ( (-γ / tconst) + stdp(((tpre - tpost') * connections), A₋, t₋) * Δ( (t - tpre) * (t - tpost') ) )
-
 end
 
 

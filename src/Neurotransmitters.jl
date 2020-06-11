@@ -5,7 +5,7 @@ function update_da(da, BA, τ; δt=1)
 	da = da + δda .* δt
 end
 
-function update_ACh!(t, l, m, params, da)
+function update_ACh!(t, l, m, params)
 
 	ACh, tpre = get_matrices(update_ACh!, m, l)
 	Φ, synt, δt = get_parameters(update_ACh!, params, l)
