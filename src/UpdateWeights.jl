@@ -24,7 +24,6 @@ function update_w(con::MBONLayer, w, min_w, γ, da, δt)
 	for (i,c) in enumerate(con)
 		update_w(c, w, min_w, γ .* c, da[i], δt)
 	end
-
 end
 
 function update_γ!(γ, connections::MBONLayer, t, tpre, tpost, tconst, A₋, t₋, δt)

@@ -165,6 +165,7 @@ function normdata(norm::Vector{normdata})
 
 	return normdata(mean/length(norm),std/length(norm))
 end
+normdata(a::Array) = normdata(mean(a), std(a))
 
 
 
@@ -189,7 +190,7 @@ end
 function train_input!(p, m, sensory_input::AbstractInput)
 	numsteps = duration(sensory_input)
 	da = Dopamine(init_da)
-	run_all_steps(p.nn, numsteps, m, p, sensory_input, da, savevars=nothing, update=true, normweights=false)
+	run_all_steps(p.nn, numsteps, m, p, sensory_input, da, savevars=nothing, update=true, normweights=true)
 	reset!(m,p)
 	return
 end
