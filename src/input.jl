@@ -109,15 +109,6 @@ get_stage(input::AbstractInput, t) = findfirst(input.cum_stages .>= t)
 """
 wrapper for sensory and reward functions
 """
-function inputandreward!(t, input, sensory, τ; da=0)
-
-	input .= input.inarrayseq[t]==1 ? input.inarray[1] : input*1
-	BA = input.BAseq[t]
-	da = update_da(da, BA, τ)
-
-	return(BA,da)	
-end
-
 function inputandreward!(t, input, sensory, τ, da_on, da)
 
 	current_sensory, give_input, give_reward, give_punishment = get_input(sensory,t)

@@ -141,8 +141,8 @@ function test_weight()
 end
 
 const stimtype = (ColorInput,)
-const sstages = [20, 50, 0]
-const inputstages = Bool[1,1,0]
+const sstages = [20, 5, 50]
+const inputstages = Bool[1,1,1]
 const dastages = Bool[0,1,0]
 const reportvar = "spiked"
 const init_da=0
