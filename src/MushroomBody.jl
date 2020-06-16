@@ -10,7 +10,7 @@ meanlayer,
 plot_before_after,
 doboth
 
-using SparseArrays, Infiltrator, ColorCoding, Random, StaticArrays
+using SparseArrays, Infiltrator, ColorCoding, Random, StaticArrays, Plots
 import Base: size, sum, show, getindex, setindex!, getproperty, setproperty!, zero, length, one, fill!
 using Random, BenchmarkTools
 

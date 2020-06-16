@@ -19,7 +19,7 @@ end
 Plots the neurons and their static connections
 """
 function networkplot(p, nn, connections::SynapseLayers)
-
+	@infiltrate
 	ycoords, xcoords = neuronplot!(p, nn)
 	for i in 1:length(nn)-1
 		y = (ycoords[i], ycoords[i+1])
@@ -29,11 +29,11 @@ function networkplot(p, nn, connections::SynapseLayers)
 
 	return p
 end
-function networkplot(p, nn, connections::SynapseLayers, weights::SynapseLayers; maxneurons=50)
+function networkplot(p, nn, connections::SynapseLayers, weights::SynapseLayers; maxneurons=10)
 
 	nn = min.(maxneurons, nn)
 	ycoords, xcoords = neuronplot!(p, nn)
-
+	@infiltrate
 	for i in 1:length(nn)-1
 		y = (ycoords[i], ycoords[i+1])
 		x = (xcoords[i], xcoords[i+1])
@@ -46,10 +46,12 @@ function networkplot(p, nn, connections::SynapseLayers, weights::SynapseLayers; 
 
 	return p	
 end
-function networkplot(p, nn, m::MatrixTypes; maxneurons=50)
+function networkplot(p, nn, m::MatrixTypes; maxneurons=10)
 
 	nn = min.(maxneurons, nn)
+	@infiltrate
 	ycoords, xcoords = neuronplot!(p, nn, m, maxneurons)
+
 	for i in 1:length(nn)-1
 		y = (ycoords[i], ycoords[i+1])
 		x = (xcoords[i], xcoords[i+1])
@@ -102,6 +104,12 @@ function neuronplot!(p, nn)
 	scatter!(p, xcoords, ycoords, markercolor=:white, markersize=markersizes, legend=false, ylims=maxy, xlims=maxx)
 	return (ys, xs)
 end
+
+#function neuronplot!(p, nn, m::MatrixTypes, maxneurons::Array)
+#	for (max_n, num_n) in maxneurons, nn
+#		neuronplot!(p, num_n, m, max_n)
+#	end
+#end
 
 function neuronplot!(p, nn, m::MatrixTypes, maxneurons)
 

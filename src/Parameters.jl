@@ -81,7 +81,7 @@ function get_parameters()
 	weight_target = (10, 4000, 200)
 	normalise_to = (20000, 100, 200)
 	winners = (3, 10, 10)
-	da_on = 0.4#0.5#.0009
+	da_on = 0.2#0.5#.0009
 	δt = 1
 
 	parameters = ParameterTypes(

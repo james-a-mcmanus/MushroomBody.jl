@@ -34,13 +34,24 @@ end
 
 function update_γ!(γ, connections, t, tpre, tpost, tconst, A₋, t₋, δt)
 
-	γ .= @. γ + δt * ( (-γ / tconst) + stdp(((tpre - tpost') * connections), A₋, t₋) * Δ( (t - tpre) * (t - tpost') ) )
+	γ .= @. γ + δt * ( (-γ / tconst) + stdp.(((tpre - tpost') * connections), A₋, t₋) * Δ( (t - tpre) * (t - tpost') ) )
 end
 
 
-function stdp(latency, A₋, t₋)
+#=function stdp(latency, A₋, t₋)
 
 	(latency .!= 0) .* A₋ .* exp.(latency ./ t₋) # punishes neurnos where pre fired after post
+end=#
+
+function stdp(latency, A₋, t₋)
+
+	if latency == 0
+        return 0
+    elseif latency > 0
+        return A₋ * exp(latency / t₋)
+    else
+        return A₋ * exp(latency / (-t₋))
+    end
 end
 
 function normalise_layer!(m, p; l=2)

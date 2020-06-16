@@ -53,19 +53,17 @@ function test_da()
 	τ = 20
 	da = 0
 	BA = repeat([0.5, 0.0, 0.0, 0.0],inner=8, outer=5)
-	p = scatter()
+	p = Plots.scatter()
 
 	for t = 1:ts
 		da = update_da(da, BA[t], τ; δt=1)
 		@show da, BA[t]
-		scatter!(p, [t], [da], show=true, legend=false)
+		Plots.scatter!(p, [t], [da], show=true, legend=false)
 	end
 end
 
 function test_transmission()
 
-	@eval using Plots
-	gr()
 
 	# get2 layers, with one synapse between them, and see how activity in the 1st translates to activity in the second.
 	nn = [1, 1]
@@ -86,7 +84,7 @@ function test_transmission()
 	d = 8
 	k = 2
 
-	p = scatter()
+	p = Plots.scatter()
 
 	for t = 1:ts
 
@@ -94,7 +92,7 @@ function test_transmission()
 		# calc output.
 		input = (-v) .* w .* ACh
 		update_activation!(1, v, -60, sp, spt2, t, -40, rec, input, C, a, b, c, d, k;)
-		scatter!(p,[t], v, legend=false, color=RGB(0.5, 0.5, 1))
+		Plots.scatter!(p,[t], v, legend=false, color=RGB(0.5, 0.5, 1))
 
 	end
 
@@ -179,7 +177,7 @@ end
 
 function setup(p::ParameterTypes)
 
-	m = MatrixTypes(initialise_matrices(nn, p)...)
+	m = MatrixTypes(initialise_matrices(p.nn, p)...)
 	return (p, m)
 end
 
