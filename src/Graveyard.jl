@@ -69,3 +69,55 @@ function test_model(sensory, nn, numsteps, weights, synapses, gf::GifPlot; updat
 	gf = run_all_steps(nn, numsteps, m, p, sensory, da, gf, update=update, normweights=normweights)	
 	return (m.weights, m.synapses, gf)
 end
+
+
+
+	function update_neuron(v, vr, vt, rec, I, C, k,  a, b, c, d, σ)
+
+		ξ = (rand() - 0.5) * σ
+
+		δv = (k * (v - vr) * (v - vt) - rec + I + ξ) / C
+
+		newv = v + δv
+
+		δrec = a * (b .* (v ./ vr) .- rec)
+
+		newrec = rec + δrec
+
+		# check spikes
+		sp = newv .> vt
+		newv = newv * (! sp) + c * sp # turn all into c if above resting
+		newrec = newrec + (!sp) * d
+
+		return newv, newrec
+	end
+
+	function run_neuron(brightness)
+
+		num_steps = 1000;
+
+		input = zeros(num_steps)
+		#input[10:100] .= brightness	
+		input[200:300] .= brightness		
+		input[400:500] .= brightness	
+		voltage = zeros(num_steps)
+		voltage[1] = -65
+		rec = zeros(num_steps)
+
+		vr = -65
+		vt = -25
+		C = 100
+		k = 2
+		a = 1.5
+		b = -0.2
+		c = -60
+		d = 8
+		σ = 0.05
+
+		for t in 1:(num_steps-1)
+
+			voltage[t+1], rec[t+1] = update_neuron(voltage[t], vr, vt, rec[t], input[t], C, k, a, b, c, d, σ)
+		end
+
+		return voltage, rec
+	end
