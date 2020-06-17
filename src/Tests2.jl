@@ -193,7 +193,9 @@ function train_input!(p, m, sensory_input::AbstractInput)
 	return
 end
 
-function train_input!(p, m, sensory_input::InputSequence)
+InputArrays = Union{InputSequence, Vector{<:AbstractInput}}
+
+function train_input!(p, m, sensory_input::InputArrays)
 
 	for s in sensory_input
 		train_input!(p, m, s)
@@ -207,7 +209,7 @@ function test_input(p, m, sensory_input::AbstractInput)
 	return run_all_steps(p.nn, numsteps, m, p, sensory_input, da, savevars=nothing, update=false, normweights=false, reportvar="spiked")
 end
 
-function test_input(p, m, sensory_input::InputSequence)
+function test_input(p, m, sensory_input::InputArrays)
 	report = initialise_reporter(sensory_input, m)
 	for (i, s) in enumerate(sensory_input)
 		report[i] = test_input(p, m, s)
