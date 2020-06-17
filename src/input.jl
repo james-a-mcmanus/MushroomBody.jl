@@ -25,7 +25,7 @@ function SparseInput(arraysize::Tuple; density=0.1, filler=300, stages=[0,1,0], 
 	fillsize = round.(Int, arraysize .* density)
 	init[map(x -> 1:x, fillsize)...] .= filler * ones(fillsize)
 	shuffle!(init)
-	return AbstractInput(SparseInput, init, stages=stages, input_bool=input_bool, reward_bool=reward_bool, punishment_bool=punishment_bool)
+	return SparseInput(init, stages, input_bool, reward_bool, punishment_bool)
 end
 
 SparseRandInput(A::Array; stages=[0,1,0], input_bool=Bool[0,1,0], reward_bool=Bool[0,1,0], punishment_bool=Bool[0,0,0]) = SparseRandInput(A, stages, input_bool, reward_bool, punishment_bool)
@@ -36,7 +36,7 @@ function SparseRandInput(arraysize::Tuple; density=0.1, mean_filler=300, filler_
 	fillsize = round.(Int, arraysize .* density)
 	out[map(x -> 1:x, fillsize)...] .= mean_filler .* ones(fillsize) .+ filler_range .* randn(fillsize)
 	shuffle!(out)
-	return AbstractInput(SparseRandInput, out, stages=stages, input_bool=input_bool, reward_bool=reward_bool, punishment_bool=punishment_bool)
+	return SparseRandInput(out, stages, input_bool, reward_bool, punishment_bool)
 end
 
 RestInput(A::Array; stages=[0,1,0], input_bool=Bool[0,1,0], reward_bool=Bool[0,1,0], punishment_bool=Bool[0,0,0]) = RestInput(A, stages, input_bool, reward_bool, punishment_bool)
@@ -54,6 +54,7 @@ struct InputSequence <: AbstractSequence{Inputs}
 	default::RestInput
 end
 InputSequence(inputarray::Vector{Inputs}, default::RestInput) = InputSequence(inputarray, inputdurations(inputarray), default)
+InputSequence(inputarray::Vector{<:Inputs}) = InputSequence(inputarray, inputdurations(inputarray), RestInput((length(inputarray[1]),)))
 
 """
 functions for input types
@@ -61,7 +62,7 @@ functions for input types
 duration(input::AbstractInput) = sum(input.stages)
 duration(inseq::InputSequence) = sum(inseq.inputdurations)
 inputdurations(inseq::InputSequence) = [duration(it) for it in inseq] #? does this need to be here??
-inputdurations(inseq::Vector{Inputs}) = [duration(it) for it in inseq]
+inputdurations(inseq::Vector{<:Inputs}) = [duration(it) for it in inseq]
 time_index(inseq::InputSequence, t) = findfirst(cumsum(inseq.inputdurations) .>= t)
 
 function constructinputsequence(nn, typelist; stages=[0,1,0],input_bool=Bool[0,1,0], reward_bool=Bool[0,1,0], punishment_bool=Bool[0,0,0])
